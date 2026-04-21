@@ -10,13 +10,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@token-burner/shared": "file:../../packages/shared",
+    "drizzle-orm": "^0.44.7",
     "next": "16.2.4",
+    "pg": "^8.16.3",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.15.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
