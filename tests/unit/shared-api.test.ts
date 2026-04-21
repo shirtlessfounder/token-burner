@@ -6,7 +6,9 @@ import {
   parseBurnStartRequest,
   parseClaimCodeResponse,
   parseHeartbeatRequest,
+  parseLinkRequest,
   parseLinkResponse,
+  parseRegisterRequest,
   parseRegisterResponse,
   parseTelemetryEventRequest,
   presetIdValues,
@@ -54,6 +56,48 @@ describe("shared api contracts", () => {
       handle: "burner",
       avatar: "🔥",
     });
+  });
+
+  it("validates register and link request payloads", () => {
+    expect(
+      parseRegisterRequest({
+        claimCode: "ABC123",
+        publicHandle: "burner",
+        avatar: "🔥",
+        agentLabel: "office-macbook",
+      }),
+    ).toMatchObject({
+      claimCode: "ABC123",
+      publicHandle: "burner",
+      avatar: "🔥",
+      agentLabel: "office-macbook",
+    });
+
+    expect(() =>
+      parseRegisterRequest({
+        claimCode: "ABC123",
+        handle: "burner",
+        avatar: "🔥",
+        agentName: "office-macbook",
+      }),
+    ).toThrow(/publicHandle|agentLabel/i);
+
+    expect(
+      parseLinkRequest({
+        ownerToken: "tb_owner_123456",
+        agentLabel: "travel-laptop",
+      }),
+    ).toMatchObject({
+      ownerToken: "tb_owner_123456",
+      agentLabel: "travel-laptop",
+    });
+
+    expect(() =>
+      parseLinkRequest({
+        ownerToken: "tb_owner_123456",
+        agentName: "travel-laptop",
+      }),
+    ).toThrow(/agentLabel/i);
   });
 
   it("validates burn start payloads", () => {
