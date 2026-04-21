@@ -1,0 +1,16 @@
+{
+  "name": "token-burner",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @token-burner/site",
+    "build": "npm run build --workspace @token-burner/site && npm run build --workspace @token-burner/agent-cli",
+    "lint": "npm run lint --workspace @token-burner/site && npm run lint --workspace @token-burner/agent-cli",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  }
+}
