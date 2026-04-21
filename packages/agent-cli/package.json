@@ -1,0 +1,19 @@
+{
+  "name": "@token-burner/agent-cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local CLI runtime shell for token-burner",
+  "type": "module",
+  "bin": {
+    "token-burner-agent": "./dist/cli.js"
+  },
+  "main": "./dist/cli.js",
+  "types": "./dist/cli.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}
