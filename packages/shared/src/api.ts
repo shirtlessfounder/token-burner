@@ -23,9 +23,9 @@ export const parseClaimCodeResponse = (input: unknown): ClaimCodeResponse =>
 
 export const registerRequestSchema = z.object({
   claimCode: nonEmptyStringSchema,
-  handle: nonEmptyStringSchema,
+  publicHandle: nonEmptyStringSchema,
   avatar: nonEmptyStringSchema,
-  agentName: nonEmptyStringSchema,
+  agentLabel: nonEmptyStringSchema,
 });
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export const parseRegisterRequest = (input: unknown): RegisterRequest =>
@@ -44,7 +44,7 @@ export const parseRegisterResponse = (input: unknown): RegisterResponse =>
 
 export const linkRequestSchema = z.object({
   ownerToken: ownerTokenSchema,
-  agentName: nonEmptyStringSchema,
+  agentLabel: nonEmptyStringSchema,
 });
 export type LinkRequest = z.infer<typeof linkRequestSchema>;
 export const parseLinkRequest = (input: unknown): LinkRequest =>
@@ -64,7 +64,7 @@ export const burnStartRequestSchema = z.object({
   ownerToken: ownerTokenSchema,
   provider: providerSchema,
   targetTokens: positiveTokenCountSchema,
-  presetId: presetIdSchema.optional(),
+  presetId: presetIdSchema.nullish(),
 });
 export type BurnStartRequest = z.infer<typeof burnStartRequestSchema>;
 export const parseBurnStartRequest = (input: unknown): BurnStartRequest =>
