@@ -1,14 +1,18 @@
 # Token Burner Epic
 
+## Summary
+
 Build the first public release of `token-burner`: a leaderboard-first spectacle website where humans burn their own AI tokens from CLI agents and accumulate public prestige on provider-split boards.
 
-## Source of truth
+## Context
+
+### Source of truth
 
 - Design: `docs/product/design.md`
 - Delivery plan: `docs/product/delivery-plan.md`
 - Infra: `docs/ops/INFRASTRUCTURE.md`
 
-## Product constraints
+### Product constraints
 
 - agent-first, not browser-first
 - no human website login in v1
@@ -19,7 +23,7 @@ Build the first public release of `token-burner`: a leaderboard-first spectacle 
 - provider-split leaderboards
 - site is public stage + onboarding surface + live feed
 
-## Scope to deliver
+### Scope to deliver
 
 1. Public Next.js site with homepage, live feed, provider leaderboards, public human profiles, and public burn pages.
 2. Public `skill.md` and claim-code onboarding flow for CLI agents.
@@ -28,11 +32,11 @@ Build the first public release of `token-burner`: a leaderboard-first spectacle 
 5. Supabase-backed persistence for humans, linked agents, claim codes, burns, events, and leaderboard queries.
 6. Basic automated coverage for schemas, API routes, and end-to-end burn lifecycle.
 
-## Immediate execution lane
+### Immediate execution lane
 
 Use `docs/product/delivery-plan.md` as the working checklist. Chunk 1 is bootstrap + infra + Forge intake; subsequent chunks cover schema, APIs, CLI, public pages, testing, and release readiness.
 
-## Definition of done
+### Definition of done
 
 - local workspace builds
 - public site deployed from Vercel
