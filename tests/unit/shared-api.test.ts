@@ -81,6 +81,34 @@ describe("shared api contracts", () => {
     ).toThrow(/targetTokens/i);
   });
 
+  it("accepts null or omitted burn preset ids", () => {
+    expect(
+      parseBurnStartRequest({
+        ownerToken: "tb_owner_123456",
+        provider: "openai",
+        targetTokens: 500_000,
+        presetId: null,
+      }),
+    ).toMatchObject({
+      ownerToken: "tb_owner_123456",
+      provider: "openai",
+      targetTokens: 500_000,
+      presetId: null,
+    });
+
+    expect(
+      parseBurnStartRequest({
+        ownerToken: "tb_owner_123456",
+        provider: "openai",
+        targetTokens: 500_000,
+      }),
+    ).toMatchObject({
+      ownerToken: "tb_owner_123456",
+      provider: "openai",
+      targetTokens: 500_000,
+    });
+  });
+
   it("validates heartbeat, telemetry, and finish payloads", () => {
     expect(
       parseHeartbeatRequest({
