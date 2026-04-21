@@ -12,6 +12,7 @@ coverage/
 
 # env
 .env*
+!.env.example
 
 # deploy
 .vercel/
@@ -27,3 +28,6 @@ yarn-error.log*
 *.pem
 *.tsbuildinfo
 next-env.d.ts
+
+# local supabase metadata
+supabase/.temp/
