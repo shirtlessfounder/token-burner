@@ -115,6 +115,32 @@ describe("shared api contracts", () => {
       presetId: "tier-2",
     });
 
+    expect(
+      parseBurnStartRequest({
+        ownerToken: "tb_owner_123456",
+        provider: "anthropic",
+        targetTokens: 250_000,
+      }),
+    ).toMatchObject({
+      ownerToken: "tb_owner_123456",
+      provider: "anthropic",
+      targetTokens: 250_000,
+    });
+
+    expect(
+      parseBurnStartRequest({
+        ownerToken: "tb_owner_123456",
+        provider: "openai",
+        targetTokens: 125_000,
+        presetId: null,
+      }),
+    ).toMatchObject({
+      ownerToken: "tb_owner_123456",
+      provider: "openai",
+      targetTokens: 125_000,
+      presetId: null,
+    });
+
     expect(() =>
       parseBurnStartRequest({
         ownerToken: "tb_owner_123456",
