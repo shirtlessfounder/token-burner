@@ -593,4 +593,12 @@ describe("database query layer", () => {
       getPublicBurnById("00000000-0000-0000-0000-000000000000", { database }),
     ).resolves.toBeNull();
   });
+
+  it("returns null for malformed public burn ids", async () => {
+    const { database } = await createTestDatabase();
+
+    await expect(
+      getPublicBurnById("not-a-uuid", { database }),
+    ).resolves.toBeNull();
+  });
 });

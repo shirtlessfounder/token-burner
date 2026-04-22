@@ -15,6 +15,8 @@ const { burns, humans } = schema;
 const dayInMilliseconds = 24 * 60 * 60 * 1000;
 const weekInMilliseconds = 7 * dayInMilliseconds;
 const activeBurnStatuses = ["queued", "running", "stopping"] as const;
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type TokenBurnerDatabase = NodePgDatabase<typeof schema>;
 
@@ -322,6 +324,10 @@ export const getPublicBurnById = async (
   burnId: string,
   { database }: QueryOptions = {},
 ): Promise<PublicBurn | null> => {
+  if (!uuidPattern.test(burnId)) {
+    return null;
+  }
+
   const queryDatabase = await resolveDatabase(database);
 
   const [row] = await queryDatabase
