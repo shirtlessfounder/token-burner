@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import { providerFlagshipModels } from "@token-burner/shared";
 
+import { isInniesKey, resolveInniesProxyBaseUrl } from "./innies.js";
 import type {
   BurnStepRequest,
   BurnStepResult,
@@ -23,7 +24,10 @@ export const createAnthropicAdapter = (
     );
   }
 
-  const client = new Anthropic({ apiKey: credentials.apiKey });
+  const baseURL = isInniesKey(credentials.apiKey)
+    ? resolveInniesProxyBaseUrl("anthropic")
+    : undefined;
+  const client = new Anthropic({ apiKey: credentials.apiKey, baseURL });
 
   return {
     providerId: "anthropic",
