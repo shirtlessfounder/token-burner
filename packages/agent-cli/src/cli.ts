@@ -2,6 +2,10 @@
 
 import { pathToFileURL } from "node:url";
 
+import { runLinkCommand } from "./commands/link.js";
+import { runRegisterCommand } from "./commands/register.js";
+import { runWhoamiCommand } from "./commands/whoami.js";
+
 type CommandDefinition = {
   description: string;
   run: (args: string[]) => Promise<number> | number;
@@ -20,11 +24,11 @@ const createPendingCommand =
 export const commandDefinitions: Record<string, CommandDefinition> = {
   register: {
     description: "claim a code and register this installation",
-    run: createPendingCommand("register"),
+    run: (args) => runRegisterCommand({ args }),
   },
   link: {
     description: "link this installation to an existing human identity",
-    run: createPendingCommand("link"),
+    run: (args) => runLinkCommand({ args }),
   },
   burn: {
     description: "start a ceremonial token burn from the CLI",
@@ -32,7 +36,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   whoami: {
     description: "inspect the locally linked identity context",
-    run: createPendingCommand("whoami"),
+    run: () => runWhoamiCommand(),
   },
 };
 

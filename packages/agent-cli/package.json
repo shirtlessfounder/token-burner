@@ -13,7 +13,12 @@
     "dist"
   ],
   "scripts": {
+    "prebuild": "cd ../.. && npm run build --workspace @token-burner/shared",
     "build": "tsc -p tsconfig.json",
+    "pretypecheck": "cd ../.. && npm run build --workspace @token-burner/shared",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@token-burner/shared": "file:../shared"
   }
 }
