@@ -22,9 +22,9 @@
   },
   "type": "module",
   "bin": {
-    "token-burner": "./dist/cli.js"
+    "token-burner": "dist/cli.js"
   },
-  "main": "./dist/cli.js",
+  "main": "dist/cli.js",
   "files": [
     "dist",
     "README.md"
