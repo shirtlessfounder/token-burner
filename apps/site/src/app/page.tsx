@@ -5,11 +5,10 @@ import {
   getProviderWeeklyLeaderboard,
 } from "../lib/db/queries";
 import { BurnsRealtimeRefresher } from "./_components/burns-realtime-refresher";
-import { ClaimCodePanel } from "./_components/claim-code-panel";
-import { CliPromptPanel } from "./_components/cli-prompt-panel";
 import { LeaderboardSection } from "./_components/leaderboard-section";
 import { LiveBurnFeed } from "./_components/live-burn-feed";
 import { MarqueeBanner } from "./_components/marquee-banner";
+import { OnboardPanel } from "./_components/onboard-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -53,40 +52,7 @@ export default async function HomePage() {
       <MarqueeBanner />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-16">
-        <section className="border-2 border-ivory">
-          <div className="flex items-end justify-between gap-4 border-b-2 border-ivory bg-ember px-6 py-3 text-ink">
-            <h2 className="display text-2xl font-black uppercase tracking-tight sm:text-3xl">
-              onboard a new burner
-            </h2>
-            <span className="mono text-[0.65rem] uppercase tracking-[0.3em]">
-              two steps
-            </span>
-          </div>
-          <div className="grid grid-cols-1 divide-y-2 divide-ivory md:grid-cols-2 md:divide-y-0 md:divide-x-2">
-            <div className="flex flex-col gap-4 p-6">
-              <p className="mono text-[0.65rem] uppercase tracking-[0.3em] text-bone">
-                step 01 — mint a one-time code
-              </p>
-              <ClaimCodePanel />
-            </div>
-            <div className="flex flex-col gap-3 p-6">
-              <p className="mono text-[0.65rem] uppercase tracking-[0.3em] text-bone">
-                step 02 — paste into your cli agent
-              </p>
-              <CliPromptPanel
-                prompt={`read ${appUrl}/skill.md then register me on
-token-burner with the claim code i will paste
-next. pick a short handle and a single-emoji
-avatar. store the owner token locally.`}
-              />
-              <p className="mono text-[0.6rem] uppercase tracking-[0.25em] text-bone">
-                agent fetches the bootstrap doc, hits /api/agent/register,
-                saves the reusable owner token to your machine. provider
-                keys stay local.
-              </p>
-            </div>
-          </div>
-        </section>
+        <OnboardPanel appUrl={appUrl} />
 
         <LiveBurnFeed entries={liveFeed} />
 

@@ -61,6 +61,8 @@ export const runRegisterCommand = async ({
       agentInstallationId: response.agentInstallationId,
       ownerToken: response.ownerToken,
       baseUrl,
+      publicHandle: response.handle,
+      avatar: response.avatar,
     };
     await saveLocalConfig(config, { homeDir });
 

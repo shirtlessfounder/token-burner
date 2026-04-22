@@ -4,9 +4,11 @@ import path from "node:path";
 
 export type LocalConfig = {
   agentInstallationId: string;
+  avatar?: string;
   baseUrl: string;
   humanId: string;
   ownerToken: string;
+  publicHandle?: string;
 };
 
 type LocalStoreOptions = {
@@ -18,6 +20,9 @@ const CONFIG_FILE_NAME = "config.json";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
+
+const isOptionalString = (value: unknown): value is string | undefined =>
+  value === undefined || (typeof value === "string" && value.length > 0);
 
 const isLocalConfig = (value: unknown): value is LocalConfig => {
   if (!isRecord(value)) {
@@ -32,7 +37,9 @@ const isLocalConfig = (value: unknown): value is LocalConfig => {
     typeof value.agentInstallationId === "string" &&
     value.agentInstallationId.length > 0 &&
     typeof value.baseUrl === "string" &&
-    value.baseUrl.length > 0
+    value.baseUrl.length > 0 &&
+    isOptionalString(value.publicHandle) &&
+    isOptionalString(value.avatar)
   );
 };
 
