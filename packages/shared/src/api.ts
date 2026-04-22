@@ -5,7 +5,7 @@ import {
   presetIdSchema,
   providerSchema,
   terminalBurnStatusSchema,
-} from "./domain";
+} from "./domain.js";
 
 const nonEmptyStringSchema = z.string().trim().min(1);
 const isoDatetimeSchema = z.string().datetime({ offset: true });
