@@ -215,7 +215,7 @@ afterEach(async () => {
 });
 
 describe("database query layer", () => {
-  it("keeps provider leaderboards split and applies daily and weekly time windows", async () => {
+  it("aggregates provider leaderboards per human and applies daily and weekly time windows", async () => {
     const { database } = await createTestDatabase();
 
     const alice = await seedHuman(database, {
@@ -231,14 +231,28 @@ describe("database query layer", () => {
       avatarUrl: "https://example.com/chloe.png",
     });
 
-    const openaiDaily = await seedBurn(database, {
+    await seedBurn(database, {
       ...alice,
       provider: "openai",
       status: "completed",
       billedTokensConsumed: 600,
       createdAt: new Date("2026-04-21T10:00:00.000Z"),
     });
-    const openaiWeekly = await seedBurn(database, {
+    await seedBurn(database, {
+      ...alice,
+      provider: "openai",
+      status: "completed",
+      billedTokensConsumed: 450,
+      createdAt: new Date("2026-04-21T09:30:00.000Z"),
+    });
+    await seedBurn(database, {
+      ...alice,
+      provider: "openai",
+      status: "interrupted",
+      billedTokensConsumed: 140,
+      createdAt: new Date("2026-04-17T08:00:00.000Z"),
+    });
+    await seedBurn(database, {
       ...bob,
       provider: "openai",
       status: "interrupted",
@@ -252,14 +266,14 @@ describe("database query layer", () => {
       billedTokensConsumed: 1_200,
       createdAt: new Date("2026-04-10T08:00:00.000Z"),
     });
-    const anthropicDaily = await seedBurn(database, {
+    await seedBurn(database, {
       ...chloe,
       provider: "anthropic",
       status: "completed",
       billedTokensConsumed: 900,
       createdAt: new Date("2026-04-21T09:00:00.000Z"),
     });
-    const anthropicWeekly = await seedBurn(database, {
+    await seedBurn(database, {
       ...alice,
       provider: "anthropic",
       status: "completed",
@@ -286,29 +300,85 @@ describe("database query layer", () => {
       database,
     });
 
-    expect(daily.openai.map((entry) => entry.burnId)).toEqual([openaiDaily.burnId]);
-    expect(daily.anthropic.map((entry) => entry.burnId)).toEqual([
-      anthropicDaily.burnId,
+    expect(daily.openai).toEqual([
+      {
+        rank: 1,
+        humanId: alice.humanId,
+        handle: "Alice",
+        avatarUrl: "https://example.com/alice.png",
+        provider: "openai",
+        totalBilledTokens: 1_050,
+      },
+    ]);
+    expect(daily.anthropic).toEqual([
+      {
+        rank: 1,
+        humanId: chloe.humanId,
+        handle: "Chloe",
+        avatarUrl: "https://example.com/chloe.png",
+        provider: "anthropic",
+        totalBilledTokens: 900,
+      },
     ]);
 
-    expect(weekly.openai.map((entry) => entry.burnId)).toEqual([
-      openaiWeekly.burnId,
-      openaiDaily.burnId,
+    expect(weekly.openai).toEqual([
+      {
+        rank: 1,
+        humanId: alice.humanId,
+        handle: "Alice",
+        avatarUrl: "https://example.com/alice.png",
+        provider: "openai",
+        totalBilledTokens: 1_190,
+      },
+      {
+        rank: 2,
+        humanId: bob.humanId,
+        handle: "Bob",
+        avatarUrl: "https://example.com/bob.png",
+        provider: "openai",
+        totalBilledTokens: 800,
+      },
     ]);
-    expect(weekly.anthropic.map((entry) => entry.burnId)).toEqual([
-      anthropicDaily.burnId,
-      anthropicWeekly.burnId,
+    expect(weekly.anthropic).toEqual([
+      {
+        rank: 1,
+        humanId: chloe.humanId,
+        handle: "Chloe",
+        avatarUrl: "https://example.com/chloe.png",
+        provider: "anthropic",
+        totalBilledTokens: 900,
+      },
+      {
+        rank: 2,
+        humanId: alice.humanId,
+        handle: "Alice",
+        avatarUrl: "https://example.com/alice.png",
+        provider: "anthropic",
+        totalBilledTokens: 500,
+      },
     ]);
 
-    expect(allTime.openai.map((entry) => entry.provider)).toEqual([
-      "openai",
-      "openai",
-      "openai",
+    expect(allTime.openai.map((entry) => entry.humanId)).toEqual([
+      chloe.humanId,
+      alice.humanId,
+      bob.humanId,
+    ]);
+    expect(allTime.openai.map((entry) => entry.totalBilledTokens)).toEqual([
+      1_200,
+      1_190,
+      800,
     ]);
     expect(allTime.anthropic.map((entry) => entry.provider)).toEqual([
       "anthropic",
       "anthropic",
     ]);
+    expect(new Set(allTime.openai.map((entry) => entry.humanId)).size).toBe(
+      allTime.openai.length,
+    );
+    expect(allTime.openai[0]).not.toHaveProperty("burnId");
+    expect(allTime.openai[0]).not.toHaveProperty("model");
+    expect(allTime.openai[0]).not.toHaveProperty("requestedBilledTokenTarget");
+    expect(allTime.openai[0]).not.toHaveProperty("status");
   });
 
   it("returns only active burns in the live feed", async () => {

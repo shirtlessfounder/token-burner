@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { type NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import {
@@ -32,6 +32,19 @@ type RecentBurnOptions = QueryOptions & {
 };
 
 type LeaderboardRow = {
+  humanId: string;
+  handle: string;
+  avatarUrl: string;
+  provider: ProviderId;
+  totalBilledTokens: number;
+};
+
+type LeaderboardAggregateRow = Omit<LeaderboardRow, "totalBilledTokens"> & {
+  totalBilledTokens: number | string | null;
+  lastQualifiedBurnAt: Date | null;
+};
+
+type BurnRecordRow = {
   burnId: string;
   humanId: string;
   handle: string;
@@ -64,7 +77,7 @@ export type LeaderboardEntry = LeaderboardRow & {
 
 export type ProviderSplitLeaderboard = Record<ProviderId, LeaderboardEntry[]>;
 
-export type LiveBurnFeedEntry = LeaderboardRow & {
+export type LiveBurnFeedEntry = BurnRecordRow & {
   lastHeartbeatAt: Date | null;
 };
 
@@ -123,7 +136,7 @@ const getWindowStart = (windowSizeInMilliseconds: number, now: Date) =>
   new Date(now.getTime() - windowSizeInMilliseconds);
 
 const mapLeaderboardRows = (
-  rows: LeaderboardRow[],
+  rows: LeaderboardAggregateRow[],
   limit: number,
 ): ProviderSplitLeaderboard => {
   const splitResults = createEmptyProviderRecord<LeaderboardEntry[]>(() => []);
@@ -132,7 +145,11 @@ const mapLeaderboardRows = (
     const providerRows = rows.filter((row) => row.provider === provider);
 
     splitResults[provider] = providerRows.slice(0, limit).map((row, index) => ({
-      ...row,
+      humanId: row.humanId,
+      handle: row.handle,
+      avatarUrl: row.avatarUrl,
+      provider: row.provider,
+      totalBilledTokens: normalizeNumericValue(row.totalBilledTokens),
       rank: index + 1,
     }));
   }
@@ -150,6 +167,8 @@ const getProviderLeaderboard = async ({
 }): Promise<ProviderSplitLeaderboard> => {
   const queryDatabase = await resolveDatabase(database);
   const conditions = [inArray(burns.status, terminalBurnStatusValues)];
+  const totalBilledTokens = sql<string>`coalesce(sum(${burns.billedTokensConsumed}), 0)`;
+  const lastQualifiedBurnAt = sql<Date>`max(${burns.createdAt})`;
 
   if (windowStart) {
     conditions.push(gte(burns.createdAt, windowStart));
@@ -157,23 +176,18 @@ const getProviderLeaderboard = async ({
 
   const rows = await queryDatabase
     .select({
-      burnId: burns.id,
       humanId: humans.id,
       handle: humans.publicHandle,
       avatarUrl: humans.avatarUrl,
       provider: burns.provider,
-      model: burns.model,
-      requestedBilledTokenTarget: burns.requestedBilledTokenTarget,
-      billedTokensConsumed: burns.billedTokensConsumed,
-      status: burns.status,
-      createdAt: burns.createdAt,
-      startedAt: burns.startedAt,
-      finishedAt: burns.finishedAt,
+      totalBilledTokens,
+      lastQualifiedBurnAt,
     })
     .from(burns)
     .innerJoin(humans, eq(burns.humanId, humans.id))
     .where(and(...conditions))
-    .orderBy(desc(burns.billedTokensConsumed), desc(burns.createdAt));
+    .groupBy(humans.id, humans.publicHandle, humans.avatarUrl, burns.provider)
+    .orderBy(desc(totalBilledTokens), desc(lastQualifiedBurnAt), asc(humans.id));
 
   return mapLeaderboardRows(rows, limit);
 };
