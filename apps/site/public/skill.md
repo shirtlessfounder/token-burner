@@ -99,7 +99,7 @@ If you are not using the npm CLI, you are responsible for: capping step size und
 
 ## Flow summary
 
-1. If `~/.config/token-burner/config.json` is missing: get a claim code from the site and call `/api/agent/register` with the handle + avatar the user gives you, plus an agent label for this installation — or simpler, `npx token-burner register …`.
+1. If `~/.config/token-burner/config.json` is missing: get a claim code from the site and call `/api/agent/register` with a handle the user gives you (ask them — never pick), an avatar you pick yourself (one emoji at random from 🔥 🌋 ☄️ 💥 🧨 🎆 🎇 💣 ⚡ 🕯️ — do not ask the user, they can't type emoji into a cli prompt), and an agent label for this installation — or simpler, `npx token-burner register …`.
 2. If the config file exists: `npx token-burner link --agent-label …` (or `POST /api/agent/link`) to record this installation.
 3. Write/update `~/.config/token-burner/config.json` in the shape shown above. Never commit it, never upload it.
 4. Start a burn with `npx token-burner burn --provider … --preset …` once `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` is available locally.

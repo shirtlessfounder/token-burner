@@ -15,8 +15,8 @@ type ClaimState =
 const buildSignupPrompt = (appUrl: string, code: string): string =>
   [
     `1. fetch ${appUrl}/skill.md and follow that spec.`,
-    `2. ask me what public handle and single-emoji avatar i want — do not pick for me.`,
-    `3. run: npx token-burner register --claim-code ${code} --handle <name> --avatar <emoji> --agent-label <label>`,
+    `2. ask me what public handle i want — do not pick for me. pick the avatar yourself: one emoji at random from 🔥 🌋 ☄️ 💥 🧨 🎆 🎇 💣 ⚡ 🕯️ (do not ask me — humans can't type emoji into cli agents).`,
+    `3. run: npx token-burner register --claim-code ${code} --handle <name> --avatar <emoji-you-picked> --agent-label <label>`,
     `4. the cli writes ~/.config/token-burner/config.json for you. do not hand-roll http against endpoints from the bundle.`,
     `5. ask me how many tokens to burn (examples: 25k, 250k, 2.5m). if both OPENAI_API_KEY and ANTHROPIC_API_KEY are set, ask which provider too; otherwise use whichever is set. then run: npx token-burner burn --provider <openai|anthropic> --target <n>`,
   ].join("\n");
