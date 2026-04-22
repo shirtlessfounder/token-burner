@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import { type NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { type BurnStatus } from "@token-burner/shared";
@@ -41,6 +41,8 @@ const activeBurnSelection = {
   finishedAt: schema.burns.finishedAt,
   lastHeartbeatAt: schema.burns.lastHeartbeatAt,
 };
+
+const activeBurnTimestampFallback = sql<Date>`coalesce(${schema.burns.lastHeartbeatAt}, ${schema.burns.startedAt}, ${schema.burns.createdAt})`;
 
 const resolveDatabase = async (
   database?: TokenBurnerDatabase,
@@ -87,7 +89,7 @@ export const interruptStaleBurns = async ({
       and(
         eq(schema.burns.humanId, humanId),
         inArray(schema.burns.status, activeBurnStatuses),
-        lte(schema.burns.lastHeartbeatAt, staleCutoff),
+        lte(activeBurnTimestampFallback, staleCutoff),
       ),
     )
     .returning(activeBurnSelection);

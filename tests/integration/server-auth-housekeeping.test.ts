@@ -423,6 +423,104 @@ describe("server auth and housekeeping helpers", () => {
     });
   });
 
+  it("interrupts a stale queued burn that never heartbeated before allowing a replacement burn", async () => {
+    const { database } = await createTestDatabase();
+    const human = await seedHuman(database, {
+      handle: "eve",
+      avatarUrl: "https://example.com/eve.png",
+    });
+
+    const staleBurn = await seedBurn(database, {
+      ...human,
+      status: "queued",
+      createdAt: new Date("2026-04-21T11:50:00.000Z"),
+      startedAt: null,
+      lastHeartbeatAt: null,
+    });
+
+    const { ensureNoActiveBurnConflict } = await import(
+      "../../apps/site/src/lib/server/housekeeping"
+    );
+
+    await expect(
+      ensureNoActiveBurnConflict({
+        humanId: human.humanId,
+        database,
+        now: fixedNow,
+      }),
+    ).resolves.toBeUndefined();
+
+    const [interruptedBurn] = await database
+      .select({
+        status: schema.burns.status,
+        finishedAt: schema.burns.finishedAt,
+      })
+      .from(schema.burns)
+      .where(eq(schema.burns.id, staleBurn.burnId));
+
+    expect(interruptedBurn).toMatchObject({
+      status: "interrupted",
+      finishedAt: fixedNow,
+    });
+
+    await expect(
+      seedBurn(database, {
+        ...human,
+        status: "running",
+        createdAt: fixedNow,
+        lastHeartbeatAt: fixedNow,
+      }),
+    ).resolves.toMatchObject({
+      burnId: expect.any(String),
+    });
+  });
+
+  it("keeps a recently started running burn without heartbeats active", async () => {
+    const { database } = await createTestDatabase();
+    const human = await seedHuman(database, {
+      handle: "finn",
+      avatarUrl: "https://example.com/finn.png",
+    });
+
+    const freshStartedAt = new Date("2026-04-21T11:58:30.000Z");
+    const freshBurn = await seedBurn(database, {
+      ...human,
+      status: "running",
+      createdAt: new Date("2026-04-21T11:40:00.000Z"),
+      startedAt: freshStartedAt,
+      lastHeartbeatAt: null,
+    });
+
+    const { ensureNoActiveBurnConflict } = await import(
+      "../../apps/site/src/lib/server/housekeeping"
+    );
+
+    await expect(
+      ensureNoActiveBurnConflict({
+        humanId: human.humanId,
+        database,
+        now: fixedNow,
+      }),
+    ).rejects.toThrow(/active burn/i);
+
+    const [activeBurn] = await database
+      .select({
+        status: schema.burns.status,
+        startedAt: schema.burns.startedAt,
+        finishedAt: schema.burns.finishedAt,
+        lastHeartbeatAt: schema.burns.lastHeartbeatAt,
+      })
+      .from(schema.burns)
+      .where(eq(schema.burns.id, freshBurn.burnId));
+
+    expect(activeBurn).toMatchObject({
+      status: "running",
+      startedAt: freshStartedAt,
+      finishedAt: null,
+      lastHeartbeatAt: null,
+    });
+  });
+
   it("rejects a second non-stale active burn for the same human", async () => {
     const { database } = await createTestDatabase();
     const human = await seedHuman(database, {
