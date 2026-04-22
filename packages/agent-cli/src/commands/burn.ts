@@ -1,6 +1,9 @@
 import {
+  burnPresets,
   getBurnPreset,
+  presetIdValues,
   presetIdSchema,
+  providerValues,
   providerSchema,
   type PresetId,
   type ProviderId,
@@ -55,6 +58,38 @@ const parsePositiveInt = (value: string, label: string): number => {
   return parsed;
 };
 
+export const formatBurnUsage = (): string =>
+  `token-burner-agent burn --provider <${providerValues.join("|")}> (--target N | --preset ${presetIdValues.join("|")}) [--base-url URL]`;
+
+export const formatBurnHelp = (): string => {
+  const presetLines = burnPresets.map(
+    (preset) =>
+      `  ${preset.id.padEnd(7)}${preset.label} (${preset.targetTokens.toLocaleString()} billed tokens)`,
+  );
+
+  return [
+    "token-burner-agent burn",
+    "",
+    "Usage:",
+    `  ${formatBurnUsage()}`,
+    "",
+    "Use exactly one of --target or --preset.",
+    "",
+    "Options:",
+    `  --provider <${providerValues.join("|")}>`,
+    "  --target N",
+    `  --preset <${presetIdValues.join("|")}>`,
+    "  --base-url URL",
+    "",
+    "Preset tiers:",
+    ...presetLines,
+    "",
+    "Examples:",
+    "  token-burner-agent burn --provider anthropic --target 50000",
+    "  token-burner-agent burn --provider openai --preset tier-2",
+  ].join("\n");
+};
+
 export const runBurnCommand = async ({
   args,
   io,
@@ -96,9 +131,7 @@ export const runBurnCommand = async ({
   } catch (error) {
     if (error instanceof CliArgsError) {
       stderr.write(`${error.message}\n`);
-      stderr.write(
-        "usage: token-burner-agent burn --provider anthropic (--target N | --preset tier-1|tier-2|tier-3) [--base-url URL]\n",
-      );
+      stderr.write(`usage: ${formatBurnUsage()}\n`);
       return 2;
     }
     throw error;
