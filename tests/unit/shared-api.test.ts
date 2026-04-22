@@ -104,12 +104,14 @@ describe("shared api contracts", () => {
     expect(
       parseBurnStartRequest({
         ownerToken: "tb_owner_123456",
+        agentInstallationId: "install-abc",
         provider: "openai",
         targetTokens: 500_000,
         presetId: "tier-2",
       }),
     ).toMatchObject({
       ownerToken: "tb_owner_123456",
+      agentInstallationId: "install-abc",
       provider: "openai",
       targetTokens: 500_000,
       presetId: "tier-2",
@@ -118,11 +120,13 @@ describe("shared api contracts", () => {
     expect(
       parseBurnStartRequest({
         ownerToken: "tb_owner_123456",
+        agentInstallationId: "install-abc",
         provider: "anthropic",
         targetTokens: 250_000,
       }),
     ).toMatchObject({
       ownerToken: "tb_owner_123456",
+      agentInstallationId: "install-abc",
       provider: "anthropic",
       targetTokens: 250_000,
     });
@@ -130,12 +134,14 @@ describe("shared api contracts", () => {
     expect(
       parseBurnStartRequest({
         ownerToken: "tb_owner_123456",
+        agentInstallationId: "install-abc",
         provider: "openai",
         targetTokens: 125_000,
         presetId: null,
       }),
     ).toMatchObject({
       ownerToken: "tb_owner_123456",
+      agentInstallationId: "install-abc",
       provider: "openai",
       targetTokens: 125_000,
       presetId: null,

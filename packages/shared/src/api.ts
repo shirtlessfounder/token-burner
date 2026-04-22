@@ -62,6 +62,7 @@ export const parseLinkResponse = (input: unknown): LinkResponse =>
 
 export const burnStartRequestSchema = z.object({
   ownerToken: ownerTokenSchema,
+  agentInstallationId: nonEmptyStringSchema,
   provider: providerSchema,
   targetTokens: positiveTokenCountSchema,
   presetId: presetIdSchema.nullish(),

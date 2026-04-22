@@ -114,6 +114,7 @@ export const burns = pgTable(
     startedAt: timestamp("started_at", { withTimezone: true }),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
     lastHeartbeatAt: timestamp("last_heartbeat_at", { withTimezone: true }),
+    burnSessionTokenHash: text("burn_session_token_hash"),
   },
   (table) => [
     check(
@@ -135,6 +136,9 @@ export const burns = pgTable(
     uniqueIndex("burns_one_active_per_human_idx")
       .on(table.humanId)
       .where(sql`${table.status} in (${activeBurnStatusesSql})`),
+    uniqueIndex("burns_burn_session_token_hash_idx")
+      .on(table.burnSessionTokenHash)
+      .where(sql`${table.burnSessionTokenHash} is not null`),
   ],
 );
 
