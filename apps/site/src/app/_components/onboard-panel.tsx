@@ -13,10 +13,10 @@ type ClaimState =
   | { status: "ready"; code: string; expiresAt: string };
 
 const buildSignupPrompt = (appUrl: string, code: string): string =>
-  `read ${appUrl}/skill.md then register me on token-burner with claim code ${code}. ask me what public handle and single-emoji avatar i want — do not pick for me. save the returned identity (publicHandle, avatar, ownerToken, humanId, agentInstallationId, baseUrl) to ~/.config/token-burner/config.json with mode 0600.`;
+  `read ${appUrl}/skill.md then onboard me on token-burner using claim code ${code}. ask me what public handle and single-emoji avatar i want — do not pick for me. use the published npm cli: \`npx token-burner register --claim-code ${code} --handle <name> --avatar <emoji> --agent-label <label>\`. it writes ~/.config/token-burner/config.json for you. do not hand-roll http against endpoints from the bundle.`;
 
 const buildReturningPrompt = (appUrl: string): string =>
-  `read ${appUrl}/skill.md then link this installation to my existing token-burner identity. read the owner token from ~/.config/token-burner/config.json if present; if the file is missing, ask me to paste the owner token. then call /api/agent/link and update that same config file with the new agentInstallationId.`;
+  `read ${appUrl}/skill.md then link this installation to my existing token-burner identity. run \`npx token-burner link --agent-label <label>\` — it reads the owner token from ~/.config/token-burner/config.json. if that file is missing, ask me to paste the owner token and pass it with --owner-token. do not hand-roll http against endpoints from the bundle.`;
 
 export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element {
   const [mode, setMode] = useState<Mode>("new");

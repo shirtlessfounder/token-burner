@@ -2,6 +2,7 @@ import OpenAI from "openai";
 
 import { providerFlagshipModels } from "@token-burner/shared";
 
+import { isInniesKey, resolveInniesProxyBaseUrl } from "./innies.js";
 import type {
   BurnStepRequest,
   BurnStepResult,
@@ -23,7 +24,10 @@ export const createOpenAIAdapter = (
     );
   }
 
-  const client = new OpenAI({ apiKey: credentials.apiKey });
+  const baseURL = isInniesKey(credentials.apiKey)
+    ? resolveInniesProxyBaseUrl("openai")
+    : undefined;
+  const client = new OpenAI({ apiKey: credentials.apiKey, baseURL });
 
   return {
     providerId: "openai",

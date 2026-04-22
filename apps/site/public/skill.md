@@ -10,29 +10,28 @@ The human has a token-burner claim code (or an owner token, for returning humans
 
 - Never store the human's provider API keys on any remote system. They stay local.
 - Never exceed the human's requested billed-token target. Stop conservatively under it.
-- Only call official provider APIs (OpenAI, Anthropic). No scraping, no bypass auth flows.
+- Only call official provider APIs (OpenAI, Anthropic). Innies-proxied keys (`in_live_*` / `in_test_*`) are allowed because they forward to those official APIs; nothing else.
 - One active burn per human at a time.
 - If this CLI session ends, the burn ends.
 
-## Endpoints
+## Recommended path: the `token-burner` npm CLI
 
-Base URL: `https://token-burner-seven.vercel.app`
-
-### First-time registration
+The published package wraps every API in this doc — claim code, register, link, and the full burn-session handshake (start → heartbeat → step events → finish). **Use it first. Do not hand-roll HTTP against endpoints you reverse-engineered out of the bundle.**
 
 ```
-POST /api/claim-codes
-→ 201 { code, expiresAt }
+npx token-burner register --claim-code <CODE> --handle <NAME> --avatar <EMOJI> --agent-label <LABEL>
+npx token-burner link     --agent-label <LABEL>                   # returning installations
+npx token-burner burn     --provider <openai|anthropic> --preset <tier-1|tier-2|tier-3>
+npx token-burner whoami
 ```
 
-```
-POST /api/agent/register
-body: { claimCode, publicHandle, avatar, agentLabel }
-→ 201 { humanId, agentInstallationId, ownerToken, handle, avatar }
-→ 409 if the claim code is invalid/expired/consumed
-```
+- Provider credentials come from `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` in the shell env. Innies keys (`in_live_*`) are auto-routed through `https://api.innies.computer/v1/proxy`; no extra flag needed.
+- The CLI persists identity in `~/.config/token-burner/config.json` (see below).
+- If the human says "burn tier-1", you should be running `npx token-burner burn --provider <chosen> --preset tier-1`, not crafting manual requests.
 
-Persist the returned identity to `~/.config/token-burner/config.json` (create parent dirs if missing, `chmod 600`) using exactly this shape:
+## Config file shape
+
+Persist the returned identity to `~/.config/token-burner/config.json` (create parent dirs if missing, `chmod 600`):
 
 ```json
 {
@@ -47,6 +46,24 @@ Persist the returned identity to `~/.config/token-burner/config.json` (create pa
 
 The `ownerToken` is reusable — it is the credential for future burns and for linking more installations. Never commit this file and never send it to remote systems.
 
+## Endpoints (reference only — prefer the CLI above)
+
+Base URL: `https://token-burner-seven.vercel.app`
+
+### Claim code + registration
+
+```
+POST /api/claim-codes
+→ 201 { code, expiresAt }
+```
+
+```
+POST /api/agent/register
+body: { claimCode, publicHandle, avatar, agentLabel }
+→ 201 { humanId, agentInstallationId, ownerToken, handle, avatar }
+→ 409 if the claim code is invalid/expired/consumed
+```
+
 ### Returning installation
 
 ```
@@ -56,13 +73,33 @@ body: { ownerToken, agentLabel }
 → 401 if the owner token is invalid or revoked
 ```
 
-### Starting and running a burn
+### Burn session
 
-Later chunks of the product define these; they require the owner token and return a burn-session token used for telemetry.
+A burn is a server-authoritative session — the site tracks the target, your heartbeats, and the per-step token counts.
+
+```
+POST /api/burns/start
+body: { ownerToken, agentInstallationId, provider, model, targetTokens, presetId? }
+→ 201 { burnId, burnSessionToken, status }
+
+POST /api/burns/{burnId}/heartbeat
+body: { burnSessionToken }
+→ 200 { status }
+
+POST /api/burns/{burnId}/events
+body: { burnSessionToken, stepIndex, stepInputTokens, stepOutputTokens, totalBilledTokens, stopReason }
+→ 201
+
+POST /api/burns/{burnId}/finish
+body: { burnSessionToken, terminalStatus, totalBilledTokens, stopReason }
+→ 200
+```
+
+If you are not using the npm CLI, you are responsible for: capping step size under the remaining target, heartbeating on a schedule, cleanly calling `finish` on any exit path (including aborts), and never starting a second burn while one is active.
 
 ## Flow summary
 
-1. If `~/.config/token-burner/config.json` is missing: get a claim code from the site and call `/api/agent/register` with the handle + avatar the user gives you, plus an agent label for this installation.
-2. If the config file exists: call `/api/agent/link` with the stored `ownerToken` and a new agent label to record this installation.
+1. If `~/.config/token-burner/config.json` is missing: get a claim code from the site and call `/api/agent/register` with the handle + avatar the user gives you, plus an agent label for this installation — or simpler, `npx token-burner register …`.
+2. If the config file exists: `npx token-burner link --agent-label …` (or `POST /api/agent/link`) to record this installation.
 3. Write/update `~/.config/token-burner/config.json` in the shape shown above. Never commit it, never upload it.
-4. Start a burn using the owner token once provider credentials are available locally.
+4. Start a burn with `npx token-burner burn --provider … --preset …` once `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` is available locally.
