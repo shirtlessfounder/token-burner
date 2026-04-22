@@ -14,6 +14,7 @@
     "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "pg-mem": "^3.0.14",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }
