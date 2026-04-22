@@ -1,5 +1,5 @@
 import { createHmac, randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,7 +17,16 @@ const repoRoot = path.resolve(
   "../..",
 );
 
-const migrationPath = path.join(repoRoot, "drizzle/0001_initial.sql");
+const migrationsDirectory = path.join(repoRoot, "drizzle");
+
+const readAllMigrationsSql = async (): Promise<string> => {
+  const entries = await readdir(migrationsDirectory);
+  const files = entries.filter((entry) => entry.endsWith(".sql")).sort();
+  const contents = await Promise.all(
+    files.map((file) => readFile(path.join(migrationsDirectory, file), "utf8")),
+  );
+  return contents.join("\n");
+};
 const fixedNow = new Date("2026-04-21T12:00:00.000Z");
 const ownerTokenHashSecret =
   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -48,9 +57,9 @@ const createTestDatabase = async (): Promise<TestContext> => {
     implementation: randomUUID,
   });
 
-  const migrationSql = await readFile(migrationPath, "utf8");
+  const migrationSql = await readAllMigrationsSql();
   memoryDatabase.public.none(
-    migrationSql.replace(/create extension if not exists "pgcrypto";\n\n/i, ""),
+    migrationSql.replace(/create extension if not exists "pgcrypto";\n\n?/gi, ""),
   );
 
   const adapter = memoryDatabase.adapters.createPg();

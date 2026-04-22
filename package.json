@@ -10,6 +10,7 @@
     "build": "npm run build --workspace @token-burner/site",
     "lint": "npm run lint --workspace @token-burner/site",
     "typecheck": "npm run typecheck --workspaces",
+    "pretest": "npm run build --workspace @token-burner/shared",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },

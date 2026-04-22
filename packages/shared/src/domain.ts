@@ -26,3 +26,8 @@ export type TerminalBurnStatus = z.infer<typeof terminalBurnStatusSchema>;
 export const presetIdValues = ["tier-1", "tier-2", "tier-3"] as const;
 export const presetIdSchema = z.enum(presetIdValues);
 export type PresetId = z.infer<typeof presetIdSchema>;
+
+export const providerFlagshipModels: Record<ProviderId, string> = {
+  openai: "gpt-5.4",
+  anthropic: "claude-opus-4-7",
+};
