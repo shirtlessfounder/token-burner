@@ -9,8 +9,8 @@ import { BurnLiveCounter } from "../../_components/burn-live-counter";
 export const dynamic = "force-dynamic";
 
 const providerLabels: Record<ProviderId, string> = {
-  openai: "OpenAI",
-  anthropic: "Anthropic",
+  openai: "OPENAI",
+  anthropic: "ANTHROPIC",
 };
 
 const formatDateTime = (date: Date): string =>
@@ -41,18 +41,27 @@ export default async function BurnPage({
     burn.status === "stopping";
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-16">
-      <header className="flex flex-col items-center gap-3 text-center">
-        <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-12 px-6 py-16">
+      <div className="flex items-center justify-between gap-4 border-b-2 border-ivory pb-3">
+        <Link
+          href="/"
+          className="mono text-[0.65rem] uppercase tracking-[0.3em] text-bone hover:text-ivory"
+        >
+          ← leaderboards
+        </Link>
+        <span className={`chip ${isActive ? "chip-ember" : ""}`}>
           {isActive ? "live burn" : `burn ${burn.status}`}
-        </p>
-        <p className="text-5xl">{burn.avatarUrl}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          <Link href={`/u/${burn.handle}`} className="hover:underline">
+        </span>
+      </div>
+
+      <header className="flex flex-col items-center gap-3 text-center">
+        <p className="text-6xl">{burn.avatarUrl}</p>
+        <h1 className="display text-4xl font-black uppercase leading-none tracking-tight sm:text-6xl">
+          <Link href={`/u/${burn.handle}`} className="hover:text-ember">
             {burn.handle}
           </Link>
         </h1>
-        <p className="text-sm text-zinc-500">
+        <p className="mono text-[0.7rem] uppercase tracking-[0.3em] text-bone">
           {providerLabels[burn.provider]} · {burn.model}
         </p>
       </header>
@@ -64,37 +73,43 @@ export default async function BurnPage({
         requestedBilledTokenTarget={burn.requestedBilledTokenTarget}
       />
 
-      <section className="rounded-2xl border border-zinc-200 p-5 text-sm dark:border-zinc-800">
-        <dl className="grid grid-cols-2 gap-y-2">
-          <dt className="text-zinc-500">status</dt>
-          <dd className="font-mono">{burn.status}</dd>
-          <dt className="text-zinc-500">created</dt>
-          <dd className="font-mono">{formatDateTime(burn.createdAt)}</dd>
+      <section className="border-2 border-ivory">
+        <div className="border-b-2 border-ivory bg-char px-5 py-3">
+          <p className="mono text-[0.65rem] uppercase tracking-[0.3em] text-bone">
+            telemetry
+          </p>
+        </div>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 px-5 py-4 text-sm">
+          <dt className="mono text-[0.7rem] uppercase tracking-widest text-bone">
+            status
+          </dt>
+          <dd className="mono">{burn.status}</dd>
+          <dt className="mono text-[0.7rem] uppercase tracking-widest text-bone">
+            created
+          </dt>
+          <dd className="mono">{formatDateTime(burn.createdAt)}</dd>
           {burn.startedAt ? (
             <>
-              <dt className="text-zinc-500">started</dt>
-              <dd className="font-mono">{formatDateTime(burn.startedAt)}</dd>
+              <dt className="mono text-[0.7rem] uppercase tracking-widest text-bone">
+                started
+              </dt>
+              <dd className="mono">{formatDateTime(burn.startedAt)}</dd>
             </>
           ) : null}
           {burn.finishedAt ? (
             <>
-              <dt className="text-zinc-500">finished</dt>
-              <dd className="font-mono">{formatDateTime(burn.finishedAt)}</dd>
+              <dt className="mono text-[0.7rem] uppercase tracking-widest text-bone">
+                finished
+              </dt>
+              <dd className="mono">{formatDateTime(burn.finishedAt)}</dd>
             </>
           ) : null}
-          <dt className="text-zinc-500">burn id</dt>
-          <dd className="truncate font-mono text-xs">{burn.burnId}</dd>
+          <dt className="mono text-[0.7rem] uppercase tracking-widest text-bone">
+            burn id
+          </dt>
+          <dd className="mono truncate text-xs">{burn.burnId}</dd>
         </dl>
       </section>
-
-      <footer className="text-center">
-        <Link
-          href="/"
-          className="text-xs uppercase tracking-widest text-zinc-500 hover:underline"
-        >
-          ← back to leaderboards
-        </Link>
-      </footer>
     </main>
   );
 }

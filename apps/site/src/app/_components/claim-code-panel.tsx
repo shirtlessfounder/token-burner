@@ -43,20 +43,20 @@ export function ClaimCodePanel(): React.JSX.Element {
     const expires = new Date(state.expiresAt);
     return (
       <div className="flex flex-col gap-3">
-        <div className="flex items-baseline gap-3">
-          <span className="font-mono text-3xl tracking-widest text-zinc-900 dark:text-zinc-100">
+        <div className="border-2 border-ember bg-char px-5 py-4">
+          <p className="mono text-[0.6rem] uppercase tracking-[0.3em] text-bone">
+            one-time code · expires {expires.toLocaleTimeString()}
+          </p>
+          <p className="display mt-1 text-4xl font-black tracking-[0.2em] text-ember sm:text-5xl">
             {state.code}
-          </span>
-          <span className="text-xs text-zinc-500">
-            expires {expires.toLocaleTimeString()}
-          </span>
+          </p>
         </div>
         <button
           type="button"
-          className="self-start text-xs uppercase tracking-widest text-zinc-500 underline hover:text-zinc-900 dark:hover:text-zinc-200"
+          className="self-start text-[0.65rem] uppercase tracking-[0.3em] text-bone hover:text-ivory"
           onClick={requestCode}
         >
-          mint another
+          ↻ mint another
         </button>
       </div>
     );
@@ -68,14 +68,12 @@ export function ClaimCodePanel(): React.JSX.Element {
         type="button"
         onClick={requestCode}
         disabled={state.status === "loading"}
-        className="self-start rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        className="display self-start border-2 border-ember bg-ember px-6 py-3 text-sm font-black uppercase tracking-[0.25em] text-ink hover:bg-molten hover:border-molten disabled:opacity-50"
       >
         {state.status === "loading" ? "minting…" : "mint claim code"}
       </button>
       {state.status === "error" ? (
-        <p className="text-xs text-red-600 dark:text-red-400">
-          {state.message}
-        </p>
+        <p className="mono text-xs text-molten">{state.message}</p>
       ) : null}
     </div>
   );

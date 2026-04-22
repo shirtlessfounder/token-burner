@@ -1,10 +1,12 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 import type { BurnStatus } from "@token-burner/shared";
 
 import { getSupabaseBrowserClient } from "../../lib/supabase-browser";
+import { AnimatedCounter } from "./animated-counter";
 
 type BurnRow = {
   billed_tokens_consumed: number;
@@ -36,6 +38,7 @@ export function BurnLiveCounter({
 }: BurnLiveCounterProps) {
   const [billedTokens, setBilledTokens] = useState(initialBilledTokens);
   const [status, setStatus] = useState<BurnStatus>(initialStatus);
+  const [flashKey, setFlashKey] = useState(0);
 
   useEffect(() => {
     if (!activeStatuses.has(status)) {
@@ -57,6 +60,7 @@ export function BurnLiveCounter({
           const row = payload.new as BurnRow;
           setBilledTokens(row.billed_tokens_consumed);
           setStatus(row.status);
+          setFlashKey((k) => k + 1);
         },
       )
       .subscribe();
@@ -70,19 +74,39 @@ export function BurnLiveCounter({
   const isActive = activeStatuses.has(status);
 
   return (
-    <section className="flex flex-col items-center gap-4 text-center">
-      <p className="font-mono text-6xl sm:text-7xl">
-        {formatTokens(billedTokens)}
+    <section className="flex flex-col items-center gap-6 text-center">
+      <div className="relative">
+        <AnimatePresence>
+          <motion.span
+            key={flashKey}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="pointer-events-none absolute inset-0 -z-10 blur-3xl"
+            style={{
+              background:
+                "radial-gradient(circle, var(--color-ember), transparent 70%)",
+            }}
+            aria-hidden="true"
+          />
+        </AnimatePresence>
+        <AnimatedCounter
+          value={billedTokens}
+          className="display block text-7xl font-black leading-none tracking-tight sm:text-9xl"
+        />
+      </div>
+
+      <p className="mono text-[0.7rem] uppercase tracking-[0.3em] text-bone">
+        of {formatTokens(requestedBilledTokenTarget)} billed tokens ·{" "}
+        {pct.toFixed(1)}% · <span className="text-ivory">{status}</span>
+        {isActive ? <span className="ml-2 ember-dot" /> : null}
       </p>
-      <p className="text-sm text-zinc-500">
-        of {formatTokens(requestedBilledTokenTarget)} billed tokens (
-        {pct.toFixed(1)}%) · <span className="font-mono">{status}</span>
-        {isActive ? " · live" : ""}
-      </p>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-900">
-        <div
-          className="h-full bg-zinc-900 transition-[width] duration-500 ease-out dark:bg-zinc-100"
-          style={{ width: `${pct}%` }}
+      <div className="h-2 w-full overflow-hidden border-2 border-ivory bg-char">
+        <motion.div
+          className="h-full bg-ember"
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         />
       </div>
     </section>
