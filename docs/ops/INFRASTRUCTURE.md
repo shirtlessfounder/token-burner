@@ -29,7 +29,11 @@ CLI package
 - Owner team: `dylan-slateceos-projects`
 - Project name: `token-burner`
 - Project ID: `prj_sqXmugnqbPNHSkiCmwxN2e7KKh0B`
-- Created from: `/Users/dylanvu/token-burner/apps/site`
+- Root directory (server-side): `apps/site`
+- Framework: `nextjs`
+- Install command: `cd ../.. && npm install`
+- Vercel link file lives at repo root `.vercel/project.json`
+- Production URL: `https://token-burner-seven.vercel.app` (the plain `token-burner.vercel.app` subdomain is owned by another project)
 
 Useful commands:
 
@@ -42,7 +46,6 @@ npx vercel link --yes --project token-burner --scope dylan-slateceos-projects
 Notes:
 
 - `.vercel/project.json` is local-only metadata and stays uncommitted.
-- Production URL should eventually resolve at `https://token-burner.vercel.app` unless a custom domain replaces it.
 
 ## Supabase
 
