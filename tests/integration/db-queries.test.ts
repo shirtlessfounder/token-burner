@@ -64,7 +64,13 @@ const createTestDatabase = async (): Promise<TestContext> => {
 
   const migrationSql = await readAllMigrationsSql();
   memoryDatabase.public.none(
-    migrationSql.replace(/create extension if not exists "pgcrypto";\n\n?/gi, ""),
+    migrationSql
+      .replace(/--[^\n]*/g, "")
+      .replace(/create extension if not exists "pgcrypto";\n\n?/gi, "")
+      .replace(/^alter table[^;]+enable row level security\s*;/gim, "")
+      .replace(/^create policy[^;]+;/gim, "")
+      .replace(/^revoke[^;]+;/gim, "")
+      .replace(/^alter publication[^;]+;/gim, ""),
   );
 
   const adapter = memoryDatabase.adapters.createPg();
