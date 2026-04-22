@@ -52,9 +52,9 @@ export default async function HomePage() {
       <MarqueeBanner />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-16">
-        <LeaderboardSection title="all time" leaderboard={allTime} />
-        <LeaderboardSection title="this week" leaderboard={weekly} />
         <LeaderboardSection title="today" leaderboard={daily} />
+        <LeaderboardSection title="this week" leaderboard={weekly} />
+        <LeaderboardSection title="all time" leaderboard={allTime} />
 
         <LiveBurnFeed entries={liveFeed} />
 
