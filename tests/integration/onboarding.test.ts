@@ -169,7 +169,9 @@ describe("registerHumanFromClaim", () => {
 
     expect(result.handle).toBe("alembic");
     expect(result.avatar).toBe("🔥");
-    expect(result.ownerToken).toMatch(/^tb_owner_[A-Za-z0-9_-]+$/);
+
+    const { parseRegisterResponse } = await import("@token-burner/shared");
+    expect(() => parseRegisterResponse(result)).not.toThrow();
 
     const [human] = await database
       .select()

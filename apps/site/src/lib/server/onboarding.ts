@@ -66,7 +66,7 @@ export const generateClaimCodeValue = (): string =>
   randomFromAlphabet(claimCodeLength, claimCodeAlphabet);
 
 export const generateOwnerTokenValue = (): string =>
-  `tb_owner_${randomBytes(ownerTokenBytes).toString("base64url")}`;
+  `tb_owner_${randomBytes(ownerTokenBytes).toString("hex")}`;
 
 export type CreatedClaimCode = {
   code: string;
