@@ -135,6 +135,8 @@ describe("agent cli register command", () => {
       agentInstallationId: "00000000-0000-0000-0000-000000000002",
       ownerToken: "tb_owner_abcdef0123456789",
       baseUrl: "https://token-burner.test",
+      publicHandle: "alembic",
+      avatar: "X",
     });
 
     expect(streams.collected().stdout).toContain("registered as alembic");
@@ -236,6 +238,8 @@ describe("agent cli link command", () => {
       "00000000-0000-0000-0000-000000000099",
     );
     expect(stored.ownerToken).toBe("tb_owner_deadbeef");
+    expect(stored.publicHandle).toBe("alembic");
+    expect(stored.avatar).toBe("X");
   });
 
   it("refuses to link without an owner token", async () => {
@@ -270,6 +274,8 @@ describe("agent cli whoami command", () => {
         agentInstallationId: "install-456",
         ownerToken: "tb_owner_deadbeefcafebabe1234",
         baseUrl: "https://token-burner.test",
+        publicHandle: "alembic",
+        avatar: "X",
       },
       { homeDir },
     );
@@ -282,6 +288,7 @@ describe("agent cli whoami command", () => {
 
     expect(exitCode).toBe(0);
     const out = streams.collected().stdout;
+    expect(out).toContain("alembic");
     expect(out).toContain("human-123");
     expect(out).toContain("install-456");
     expect(out).toContain("tb_owner_dea");

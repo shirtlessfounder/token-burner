@@ -26,6 +26,8 @@ export const runWhoamiCommand = async ({
     return 1;
   }
 
+  stdout.write(`handle:          ${config.publicHandle ?? "—"}\n`);
+  stdout.write(`avatar:          ${config.avatar ?? "—"}\n`);
   stdout.write(`humanId:         ${config.humanId}\n`);
   stdout.write(`installationId:  ${config.agentInstallationId}\n`);
   stdout.write(`ownerToken:      ${redactOwnerToken(config.ownerToken)}\n`);

@@ -40,6 +40,8 @@ describe("agent cli local store", () => {
       baseUrl: "https://token-burner.test",
       humanId: "human_123",
       ownerToken: "tb_owner_123456",
+      publicHandle: "alembic",
+      avatar: "X",
     };
 
     await localStore.saveLocalConfig(config, { homeDir: tempHomeDir });
@@ -57,6 +59,22 @@ describe("agent cli local store", () => {
     const savedConfig = JSON.parse(await readFile(configPath, "utf8"));
 
     expect(savedConfig).toEqual(config);
+  });
+
+  it("loads legacy configs written before handle/avatar were persisted", async () => {
+    const localStore = await importLocalStore();
+    const legacyConfig = {
+      agentInstallationId: "agent_456",
+      baseUrl: "https://token-burner.test",
+      humanId: "human_123",
+      ownerToken: "tb_owner_legacy",
+    };
+
+    await localStore.saveLocalConfig(legacyConfig, { homeDir: tempHomeDir });
+
+    expect(await localStore.loadLocalConfig({ homeDir: tempHomeDir })).toEqual(
+      legacyConfig,
+    );
   });
 
   it("returns null when no local config is present", async () => {

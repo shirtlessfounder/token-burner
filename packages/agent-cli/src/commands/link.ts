@@ -65,6 +65,8 @@ export const runLinkCommand = async ({
       agentInstallationId: response.agentInstallationId,
       ownerToken,
       baseUrl,
+      publicHandle: response.handle,
+      avatar: response.avatar,
     };
     await saveLocalConfig(nextConfig, { homeDir });
 
