@@ -31,7 +31,8 @@ export function LeaderboardSection({ title, leaderboard }: LeaderboardSectionPro
       </div>
       <div className="grid grid-cols-1 gap-0 border-2 border-ivory md:grid-cols-2">
         {providerValues.map((provider, providerIndex) => {
-          const entries = leaderboard[provider];
+          const entries = leaderboard.entries[provider];
+          const total = leaderboard.totals[provider];
           return (
             <div
               key={provider}
@@ -39,12 +40,17 @@ export function LeaderboardSection({ title, leaderboard }: LeaderboardSectionPro
                 providerIndex === 0 ? "md:border-r-2 md:border-ivory" : ""
               } border-b-2 border-ivory last:border-b-0 md:border-b-0`}
             >
-              <div className="flex items-baseline justify-between border-b-2 border-ivory bg-char px-5 py-3">
-                <h3 className="display text-xl font-black tracking-tight">
-                  {providerLabels[provider]}
-                </h3>
+              <div className="flex items-baseline justify-between gap-3 border-b-2 border-ivory bg-char px-5 py-3">
+                <div className="flex items-baseline gap-3">
+                  <h3 className="display text-xl font-black tracking-tight">
+                    {providerLabels[provider]}
+                  </h3>
+                  <span className="mono text-sm tabular-nums text-ember">
+                    {formatTokens(total)}
+                  </span>
+                </div>
                 <span className="mono text-[0.65rem] uppercase tracking-widest text-bone">
-                  billed tokens
+                  billed total
                 </span>
               </div>
               {entries.length === 0 ? (
