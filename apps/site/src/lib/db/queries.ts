@@ -53,7 +53,7 @@ type LeaderboardRow = {
   handle: string;
   avatarUrl: string;
   provider: ProviderId;
-  billedTokensConsumed: number | string;
+  totalBilledTokens: number | string;
   latestBurnCreatedAt: Date | null;
 };
 
@@ -70,7 +70,7 @@ type BurnSummaryRow = {
 };
 
 export type LeaderboardEntry = Omit<LeaderboardRow, "latestBurnCreatedAt"> & {
-  billedTokensConsumed: number;
+  totalBilledTokens: number;
   rank: number;
 };
 
@@ -148,7 +148,7 @@ const mapLeaderboardRows = (
       handle: row.handle,
       avatarUrl: row.avatarUrl,
       provider: row.provider,
-      billedTokensConsumed: normalizeNumericValue(row.billedTokensConsumed),
+      totalBilledTokens: normalizeNumericValue(row.totalBilledTokens),
       rank: index + 1,
     }));
   }
@@ -179,7 +179,7 @@ const getProviderLeaderboard = async ({
       handle: humans.publicHandle,
       avatarUrl: humans.avatarUrl,
       provider: burns.provider,
-      billedTokensConsumed: totalBilledTokens,
+      totalBilledTokens,
       latestBurnCreatedAt,
     })
     .from(burns)
