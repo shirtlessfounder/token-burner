@@ -13,10 +13,20 @@ type ClaimState =
   | { status: "ready"; code: string; expiresAt: string };
 
 const buildSignupPrompt = (appUrl: string, code: string): string =>
-  `read ${appUrl}/skill.md then onboard me on token-burner using claim code ${code}. ask me what public handle and single-emoji avatar i want — do not pick for me. use the published npm cli: \`npx token-burner register --claim-code ${code} --handle <name> --avatar <emoji> --agent-label <label>\`. it writes ~/.config/token-burner/config.json for you. do not hand-roll http against endpoints from the bundle.`;
+  [
+    `1. fetch ${appUrl}/skill.md and follow that spec.`,
+    `2. ask me what public handle and single-emoji avatar i want — do not pick for me.`,
+    `3. run: npx token-burner register --claim-code ${code} --handle <name> --avatar <emoji> --agent-label <label>`,
+    `4. the cli writes ~/.config/token-burner/config.json for you. do not hand-roll http against endpoints from the bundle.`,
+  ].join("\n");
 
 const buildReturningPrompt = (appUrl: string): string =>
-  `read ${appUrl}/skill.md then link this installation to my existing token-burner identity. run \`npx token-burner link --agent-label <label>\` — it reads the owner token from ~/.config/token-burner/config.json. if that file is missing, ask me to paste the owner token and pass it with --owner-token. do not hand-roll http against endpoints from the bundle.`;
+  [
+    `1. fetch ${appUrl}/skill.md and follow that spec.`,
+    `2. run: npx token-burner link --agent-label <label>`,
+    `3. if ~/.config/token-burner/config.json is missing, ask me to paste the owner token and pass it with --owner-token.`,
+    `4. do not hand-roll http against endpoints from the bundle.`,
+  ].join("\n");
 
 export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element {
   const [mode, setMode] = useState<Mode>("new");
@@ -104,7 +114,7 @@ export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element 
 
       <div className="flex flex-col items-center gap-4 p-6">
         {mode === "new" && claim.status !== "ready" ? (
-          <div className="flex w-full max-w-sm flex-col items-center gap-3">
+          <div className="flex w-full max-w-2xl flex-col items-center gap-3">
             <p className="mono text-center text-[0.65rem] uppercase tracking-[0.3em] text-bone">
               mint a one-time code, then paste the prompt into your cli agent
             </p>
@@ -123,7 +133,7 @@ export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element 
         ) : null}
 
         {mode === "new" && claim.status === "ready" ? (
-          <div className="w-full max-w-sm border-2 border-ember bg-char px-5 py-4 text-center">
+          <div className="w-full max-w-2xl border-2 border-ember bg-char px-5 py-4 text-center">
             <p className="mono text-[0.6rem] uppercase tracking-[0.3em] text-bone">
               one-time code · expires{" "}
               {new Date(claim.expiresAt).toLocaleTimeString()}
@@ -135,7 +145,7 @@ export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element 
         ) : null}
 
         {prompt ? (
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full max-w-2xl">
             <pre className="mono whitespace-pre-wrap break-words border-2 border-smoke bg-char p-4 pr-14 text-xs leading-relaxed text-ivory">
               {prompt}
             </pre>
@@ -160,7 +170,7 @@ export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element 
           </button>
         ) : null}
 
-        <p className="mono w-full max-w-sm text-center text-[0.6rem] uppercase tracking-[0.25em] text-bone">
+        <p className="mono w-full max-w-2xl text-center text-[0.6rem] uppercase tracking-[0.25em] text-bone">
           {mode === "new"
             ? "agent reads the bootstrap skill, hits /api/agent/register, writes ~/.config/token-burner/config.json. provider keys stay local."
             : "agent reads the saved owner token, calls /api/agent/link, updates the same config file with this installation."}
