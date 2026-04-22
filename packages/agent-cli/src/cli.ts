@@ -2,6 +2,7 @@
 
 import { pathToFileURL } from "node:url";
 
+import { runBurnCommand } from "./commands/burn.js";
 import { runLinkCommand } from "./commands/link.js";
 import { runRegisterCommand } from "./commands/register.js";
 import { runWhoamiCommand } from "./commands/whoami.js";
@@ -32,7 +33,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   burn: {
     description: "start a ceremonial token burn from the CLI",
-    run: createPendingCommand("burn"),
+    run: (args) => runBurnCommand({ args }),
   },
   whoami: {
     description: "inspect the locally linked identity context",
