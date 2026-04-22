@@ -50,12 +50,33 @@ const defaultAdapterFactory = (
 
 const parseProvider = (value: string): ProviderId => providerSchema.parse(value);
 
-const parsePositiveInt = (value: string, label: string): number => {
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new CliArgsError(`--${label} must be a positive integer`);
+const tokenSuffixMultipliers: Record<string, number> = {
+  k: 1_000,
+  m: 1_000_000,
+  b: 1_000_000_000,
+};
+
+export const parseTokenTarget = (value: string): number => {
+  const trimmed = value.trim().toLowerCase().replace(/[_,]/g, "");
+
+  const suffixMatch = trimmed.match(/^(\d+(?:\.\d+)?)([kmb])$/);
+  if (suffixMatch) {
+    const base = Number(suffixMatch[1]);
+    const multiplier = tokenSuffixMultipliers[suffixMatch[2]];
+    const result = Math.round(base * multiplier);
+    if (Number.isInteger(result) && result > 0) {
+      return result;
+    }
   }
-  return parsed;
+
+  const plain = Number(trimmed);
+  if (Number.isInteger(plain) && plain > 0) {
+    return plain;
+  }
+
+  throw new CliArgsError(
+    "--target must be a positive integer or shorthand like 5k, 250k, 2.5m, 1b",
+  );
 };
 
 export const formatBurnUsage = (): string =>
@@ -122,10 +143,7 @@ export const runBurnCommand = async ({
       targetTokens = getBurnPreset(parsedPresetId).targetTokens;
     } else {
       presetId = null;
-      targetTokens = parsePositiveInt(
-        requireFlag(flags, "target"),
-        "target",
-      );
+      targetTokens = parseTokenTarget(requireFlag(flags, "target"));
     }
     baseUrlOverride = flags["base-url"];
   } catch (error) {
