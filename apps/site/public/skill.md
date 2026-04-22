@@ -32,7 +32,20 @@ body: { claimCode, publicHandle, avatar, agentLabel }
 → 409 if the claim code is invalid/expired/consumed
 ```
 
-Store `ownerToken` locally (per the agent's config path). It is reusable and is the credential for future burns and for linking more installations.
+Persist the returned identity to `~/.config/token-burner/config.json` (create parent dirs if missing, `chmod 600`) using exactly this shape:
+
+```json
+{
+  "humanId": "…",
+  "agentInstallationId": "…",
+  "ownerToken": "…",
+  "baseUrl": "https://token-burner-seven.vercel.app",
+  "publicHandle": "…",
+  "avatar": "…"
+}
+```
+
+The `ownerToken` is reusable — it is the credential for future burns and for linking more installations. Never commit this file and never send it to remote systems.
 
 ### Returning installation
 
@@ -49,7 +62,7 @@ Later chunks of the product define these; they require the owner token and retur
 
 ## Flow summary
 
-1. If the user has no local owner token: get a claim code from the site and call `/api/agent/register` with handle + avatar + agent label.
-2. If the user has a local owner token: call `/api/agent/link` with a new agent label to record this installation.
-3. Persist the owner token locally (never in the repo, never on the website).
+1. If `~/.config/token-burner/config.json` is missing: get a claim code from the site and call `/api/agent/register` with the handle + avatar the user gives you, plus an agent label for this installation.
+2. If the config file exists: call `/api/agent/link` with the stored `ownerToken` and a new agent label to record this installation.
+3. Write/update `~/.config/token-burner/config.json` in the shape shown above. Never commit it, never upload it.
 4. Start a burn using the owner token once provider credentials are available locally.
