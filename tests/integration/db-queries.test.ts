@@ -291,7 +291,7 @@ describe("database query layer", () => {
         humanId: alice.humanId,
         handle: "Alice",
         provider: "openai",
-        billedTokensConsumed: 600,
+        totalBilledTokens: 600,
         rank: 1,
       },
     ]);
@@ -300,13 +300,13 @@ describe("database query layer", () => {
         humanId: chloe.humanId,
         handle: "Chloe",
         provider: "anthropic",
-        billedTokensConsumed: 900,
+        totalBilledTokens: 900,
         rank: 1,
       },
     ]);
 
     expect(weekly.openai.map((entry) => entry.handle)).toEqual(["Bob", "Alice"]);
-    expect(weekly.openai.map((entry) => entry.billedTokensConsumed)).toEqual([
+    expect(weekly.openai.map((entry) => entry.totalBilledTokens)).toEqual([
       800,
       600,
     ]);
@@ -314,7 +314,7 @@ describe("database query layer", () => {
       "Chloe",
       "Alice",
     ]);
-    expect(weekly.anthropic.map((entry) => entry.billedTokensConsumed)).toEqual([
+    expect(weekly.anthropic.map((entry) => entry.totalBilledTokens)).toEqual([
       900,
       500,
     ]);
@@ -324,7 +324,7 @@ describe("database query layer", () => {
       "Bob",
       "Alice",
     ]);
-    expect(allTime.openai.map((entry) => entry.billedTokensConsumed)).toEqual([
+    expect(allTime.openai.map((entry) => entry.totalBilledTokens)).toEqual([
       1_200,
       800,
       600,
@@ -333,12 +333,13 @@ describe("database query layer", () => {
       "Chloe",
       "Alice",
     ]);
-    expect(allTime.anthropic.map((entry) => entry.billedTokensConsumed)).toEqual([
+    expect(allTime.anthropic.map((entry) => entry.totalBilledTokens)).toEqual([
       900,
       500,
     ]);
 
     expect(daily.openai[0]).not.toHaveProperty("burnId");
+    expect(daily.openai[0]).not.toHaveProperty("billedTokensConsumed");
   });
 
   it("aggregates same-human burns into one ranked leaderboard row per provider", async () => {
@@ -407,7 +408,7 @@ describe("database query layer", () => {
         handle: "Alice",
         avatarUrl: "https://example.com/alice.png",
         provider: "openai",
-        billedTokensConsumed: 750,
+        totalBilledTokens: 750,
         rank: 1,
       },
       {
@@ -415,20 +416,21 @@ describe("database query layer", () => {
         handle: "Bob",
         avatarUrl: "https://example.com/bob.png",
         provider: "openai",
-        billedTokensConsumed: 700,
+        totalBilledTokens: 700,
         rank: 2,
       },
     ]);
     expect(daily.openai).toHaveLength(2);
     expect(daily.openai[0]).not.toHaveProperty("burnId");
+    expect(daily.openai[0]).not.toHaveProperty("billedTokensConsumed");
 
-    expect(weekly.openai.map((entry) => entry.billedTokensConsumed)).toEqual([
+    expect(weekly.openai.map((entry) => entry.totalBilledTokens)).toEqual([
       1_050,
       700,
     ]);
     expect(weekly.openai.map((entry) => entry.rank)).toEqual([1, 2]);
 
-    expect(allTime.openai.map((entry) => entry.billedTokensConsumed)).toEqual([
+    expect(allTime.openai.map((entry) => entry.totalBilledTokens)).toEqual([
       1_050,
       700,
     ]);
@@ -437,7 +439,7 @@ describe("database query layer", () => {
         humanId: bob.humanId,
         handle: "Bob",
         provider: "anthropic",
-        billedTokensConsumed: 950,
+        totalBilledTokens: 950,
         rank: 1,
       },
     ]);
