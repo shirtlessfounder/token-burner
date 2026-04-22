@@ -88,11 +88,11 @@ avatar. store the owner token locally.`}
           </div>
         </section>
 
+        <LiveBurnFeed entries={liveFeed} />
+
         <LeaderboardSection title="today" leaderboard={daily} />
         <LeaderboardSection title="this week" leaderboard={weekly} />
         <LeaderboardSection title="all time" leaderboard={allTime} />
-
-        <LiveBurnFeed entries={liveFeed} />
 
         <footer className="flex flex-col items-center gap-1 border-t-2 border-ivory pt-8 text-center">
           <p className="mono text-[0.6rem] uppercase tracking-[0.3em] text-bone">
