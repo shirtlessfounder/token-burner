@@ -6,6 +6,7 @@ import {
 } from "../lib/db/queries";
 import { BurnsRealtimeRefresher } from "./_components/burns-realtime-refresher";
 import { ClaimCodePanel } from "./_components/claim-code-panel";
+import { CliPromptPanel } from "./_components/cli-prompt-panel";
 import { LeaderboardSection } from "./_components/leaderboard-section";
 import { LiveBurnFeed } from "./_components/live-burn-feed";
 import { MarqueeBanner } from "./_components/marquee-banner";
@@ -72,12 +73,12 @@ export default async function HomePage() {
               <p className="mono text-[0.65rem] uppercase tracking-[0.3em] text-bone">
                 step 02 — paste into your cli agent
               </p>
-              <pre className="mono whitespace-pre-wrap break-words border-2 border-smoke bg-char p-4 text-xs leading-relaxed text-ivory">
-{`read ${appUrl}/skill.md then register me on
+              <CliPromptPanel
+                prompt={`read ${appUrl}/skill.md then register me on
 token-burner with the claim code i will paste
 next. pick a short handle and a single-emoji
 avatar. store the owner token locally.`}
-              </pre>
+              />
               <p className="mono text-[0.6rem] uppercase tracking-[0.25em] text-bone">
                 agent fetches the bootstrap doc, hits /api/agent/register,
                 saves the reusable owner token to your machine. provider
