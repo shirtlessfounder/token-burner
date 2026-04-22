@@ -197,7 +197,7 @@ describe("runBurnCommand", () => {
     const stderr = streams.collected().stderr;
     expect(stderr).toContain("missing required flag");
     expect(stderr).toContain(
-      "token-burner-agent burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--base-url URL]",
+      "token-burner burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--base-url URL]",
     );
   });
 

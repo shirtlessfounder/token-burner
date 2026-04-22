@@ -59,7 +59,7 @@ const parsePositiveInt = (value: string, label: string): number => {
 };
 
 export const formatBurnUsage = (): string =>
-  `token-burner-agent burn --provider <${providerValues.join("|")}> (--target N | --preset ${presetIdValues.join("|")}) [--base-url URL]`;
+  `token-burner burn --provider <${providerValues.join("|")}> (--target N | --preset ${presetIdValues.join("|")}) [--base-url URL]`;
 
 export const formatBurnHelp = (): string => {
   const presetLines = burnPresets.map(
@@ -68,7 +68,7 @@ export const formatBurnHelp = (): string => {
   );
 
   return [
-    "token-burner-agent burn",
+    "token-burner burn",
     "",
     "Usage:",
     `  ${formatBurnUsage()}`,
@@ -85,8 +85,8 @@ export const formatBurnHelp = (): string => {
     ...presetLines,
     "",
     "Examples:",
-    "  token-burner-agent burn --provider anthropic --target 50000",
-    "  token-burner-agent burn --provider openai --preset tier-2",
+    "  token-burner burn --provider anthropic --target 50000",
+    "  token-burner burn --provider openai --preset tier-2",
   ].join("\n");
 };
 

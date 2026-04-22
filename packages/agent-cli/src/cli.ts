@@ -50,10 +50,10 @@ export const formatHelp = (): string => {
   );
 
   return [
-    "token-burner-agent",
+    "token-burner",
     "",
     "Usage:",
-    "  token-burner-agent <command>",
+    "  token-burner <command>",
     "",
     "Commands:",
     ...commandLines,

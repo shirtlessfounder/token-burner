@@ -43,7 +43,7 @@ export const runRegisterCommand = async ({
     if (error instanceof CliArgsError) {
       stderr.write(`${error.message}\n`);
       stderr.write(
-        "usage: token-burner-agent register --claim-code CODE --handle NAME --avatar X --agent-label LABEL [--base-url URL]\n",
+        "usage: token-burner register --claim-code CODE --handle NAME --avatar X --agent-label LABEL [--base-url URL]\n",
       );
       return 2;
     }
