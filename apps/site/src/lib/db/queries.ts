@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { type NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import {
@@ -31,7 +31,7 @@ type RecentBurnOptions = QueryOptions & {
   recentBurnLimit?: number;
 };
 
-type LeaderboardRow = {
+type BurnRecordRow = {
   burnId: string;
   humanId: string;
   handle: string;
@@ -46,6 +46,15 @@ type LeaderboardRow = {
   finishedAt: Date | null;
 };
 
+type LeaderboardRow = {
+  humanId: string;
+  handle: string;
+  avatarUrl: string;
+  provider: ProviderId;
+  billedTokensConsumed: number | string;
+  latestBurnCreatedAt: Date | null;
+};
+
 type BurnSummaryRow = {
   burnId: string;
   provider: ProviderId;
@@ -58,13 +67,14 @@ type BurnSummaryRow = {
   finishedAt: Date | null;
 };
 
-export type LeaderboardEntry = LeaderboardRow & {
+export type LeaderboardEntry = Omit<LeaderboardRow, "latestBurnCreatedAt"> & {
+  billedTokensConsumed: number;
   rank: number;
 };
 
 export type ProviderSplitLeaderboard = Record<ProviderId, LeaderboardEntry[]>;
 
-export type LiveBurnFeedEntry = LeaderboardRow & {
+export type LiveBurnFeedEntry = BurnRecordRow & {
   lastHeartbeatAt: Date | null;
 };
 
@@ -132,7 +142,11 @@ const mapLeaderboardRows = (
     const providerRows = rows.filter((row) => row.provider === provider);
 
     splitResults[provider] = providerRows.slice(0, limit).map((row, index) => ({
-      ...row,
+      humanId: row.humanId,
+      handle: row.handle,
+      avatarUrl: row.avatarUrl,
+      provider: row.provider,
+      billedTokensConsumed: normalizeNumericValue(row.billedTokensConsumed),
       rank: index + 1,
     }));
   }
@@ -143,7 +157,6 @@ const mapLeaderboardRows = (
 const getProviderLeaderboard = async ({
   database,
   limit = 10,
-  now,
   windowStart,
 }: TimedQueryOptions & {
   windowStart?: Date;
@@ -155,25 +168,27 @@ const getProviderLeaderboard = async ({
     conditions.push(gte(burns.createdAt, windowStart));
   }
 
+  const totalBilledTokens = sql<string>`coalesce(sum(${burns.billedTokensConsumed}), 0)`;
+  const latestBurnCreatedAt = sql<Date>`max(${burns.createdAt})`;
+
   const rows = await queryDatabase
     .select({
-      burnId: burns.id,
       humanId: humans.id,
       handle: humans.publicHandle,
       avatarUrl: humans.avatarUrl,
       provider: burns.provider,
-      model: burns.model,
-      requestedBilledTokenTarget: burns.requestedBilledTokenTarget,
-      billedTokensConsumed: burns.billedTokensConsumed,
-      status: burns.status,
-      createdAt: burns.createdAt,
-      startedAt: burns.startedAt,
-      finishedAt: burns.finishedAt,
+      billedTokensConsumed: totalBilledTokens,
+      latestBurnCreatedAt,
     })
     .from(burns)
     .innerJoin(humans, eq(burns.humanId, humans.id))
     .where(and(...conditions))
-    .orderBy(desc(burns.billedTokensConsumed), desc(burns.createdAt));
+    .groupBy(humans.id, humans.publicHandle, humans.avatarUrl, burns.provider)
+    .orderBy(
+      desc(totalBilledTokens),
+      desc(latestBurnCreatedAt),
+      asc(humans.publicHandle),
+    );
 
   return mapLeaderboardRows(rows, limit);
 };

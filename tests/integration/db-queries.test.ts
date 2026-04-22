@@ -231,14 +231,14 @@ describe("database query layer", () => {
       avatarUrl: "https://example.com/chloe.png",
     });
 
-    const openaiDaily = await seedBurn(database, {
+    await seedBurn(database, {
       ...alice,
       provider: "openai",
       status: "completed",
       billedTokensConsumed: 600,
       createdAt: new Date("2026-04-21T10:00:00.000Z"),
     });
-    const openaiWeekly = await seedBurn(database, {
+    await seedBurn(database, {
       ...bob,
       provider: "openai",
       status: "interrupted",
@@ -252,14 +252,14 @@ describe("database query layer", () => {
       billedTokensConsumed: 1_200,
       createdAt: new Date("2026-04-10T08:00:00.000Z"),
     });
-    const anthropicDaily = await seedBurn(database, {
+    await seedBurn(database, {
       ...chloe,
       provider: "anthropic",
       status: "completed",
       billedTokensConsumed: 900,
       createdAt: new Date("2026-04-21T09:00:00.000Z"),
     });
-    const anthropicWeekly = await seedBurn(database, {
+    await seedBurn(database, {
       ...alice,
       provider: "anthropic",
       status: "completed",
@@ -286,28 +286,160 @@ describe("database query layer", () => {
       database,
     });
 
-    expect(daily.openai.map((entry) => entry.burnId)).toEqual([openaiDaily.burnId]);
-    expect(daily.anthropic.map((entry) => entry.burnId)).toEqual([
-      anthropicDaily.burnId,
+    expect(daily.openai).toMatchObject([
+      {
+        humanId: alice.humanId,
+        handle: "Alice",
+        provider: "openai",
+        billedTokensConsumed: 600,
+        rank: 1,
+      },
+    ]);
+    expect(daily.anthropic).toMatchObject([
+      {
+        humanId: chloe.humanId,
+        handle: "Chloe",
+        provider: "anthropic",
+        billedTokensConsumed: 900,
+        rank: 1,
+      },
     ]);
 
-    expect(weekly.openai.map((entry) => entry.burnId)).toEqual([
-      openaiWeekly.burnId,
-      openaiDaily.burnId,
+    expect(weekly.openai.map((entry) => entry.handle)).toEqual(["Bob", "Alice"]);
+    expect(weekly.openai.map((entry) => entry.billedTokensConsumed)).toEqual([
+      800,
+      600,
     ]);
-    expect(weekly.anthropic.map((entry) => entry.burnId)).toEqual([
-      anthropicDaily.burnId,
-      anthropicWeekly.burnId,
+    expect(weekly.anthropic.map((entry) => entry.handle)).toEqual([
+      "Chloe",
+      "Alice",
+    ]);
+    expect(weekly.anthropic.map((entry) => entry.billedTokensConsumed)).toEqual([
+      900,
+      500,
     ]);
 
-    expect(allTime.openai.map((entry) => entry.provider)).toEqual([
-      "openai",
-      "openai",
-      "openai",
+    expect(allTime.openai.map((entry) => entry.handle)).toEqual([
+      "Chloe",
+      "Bob",
+      "Alice",
     ]);
-    expect(allTime.anthropic.map((entry) => entry.provider)).toEqual([
-      "anthropic",
-      "anthropic",
+    expect(allTime.openai.map((entry) => entry.billedTokensConsumed)).toEqual([
+      1_200,
+      800,
+      600,
+    ]);
+    expect(allTime.anthropic.map((entry) => entry.handle)).toEqual([
+      "Chloe",
+      "Alice",
+    ]);
+    expect(allTime.anthropic.map((entry) => entry.billedTokensConsumed)).toEqual([
+      900,
+      500,
+    ]);
+
+    expect(daily.openai[0]).not.toHaveProperty("burnId");
+  });
+
+  it("aggregates same-human burns into one ranked leaderboard row per provider", async () => {
+    const { database } = await createTestDatabase();
+
+    const alice = await seedHuman(database, {
+      handle: "Alice",
+      avatarUrl: "https://example.com/alice.png",
+    });
+    const bob = await seedHuman(database, {
+      handle: "Bob",
+      avatarUrl: "https://example.com/bob.png",
+    });
+
+    await seedBurn(database, {
+      ...alice,
+      provider: "openai",
+      status: "completed",
+      billedTokensConsumed: 400,
+      createdAt: new Date("2026-04-21T10:00:00.000Z"),
+    });
+    await seedBurn(database, {
+      ...alice,
+      provider: "openai",
+      status: "completed",
+      billedTokensConsumed: 350,
+      createdAt: new Date("2026-04-21T08:00:00.000Z"),
+    });
+    await seedBurn(database, {
+      ...alice,
+      provider: "openai",
+      status: "interrupted",
+      billedTokensConsumed: 300,
+      createdAt: new Date("2026-04-18T08:00:00.000Z"),
+    });
+    await seedBurn(database, {
+      ...bob,
+      provider: "openai",
+      status: "completed",
+      billedTokensConsumed: 700,
+      createdAt: new Date("2026-04-21T09:00:00.000Z"),
+    });
+    await seedBurn(database, {
+      ...bob,
+      provider: "anthropic",
+      status: "completed",
+      billedTokensConsumed: 950,
+      createdAt: new Date("2026-04-21T09:30:00.000Z"),
+    });
+
+    const daily = await getProviderDailyLeaderboard({
+      database,
+      now: fixedNow,
+    });
+    const weekly = await getProviderWeeklyLeaderboard({
+      database,
+      now: fixedNow,
+    });
+    const allTime = await getProviderAllTimeLeaderboard({
+      database,
+    });
+
+    expect(daily.openai).toMatchObject([
+      {
+        humanId: alice.humanId,
+        handle: "Alice",
+        avatarUrl: "https://example.com/alice.png",
+        provider: "openai",
+        billedTokensConsumed: 750,
+        rank: 1,
+      },
+      {
+        humanId: bob.humanId,
+        handle: "Bob",
+        avatarUrl: "https://example.com/bob.png",
+        provider: "openai",
+        billedTokensConsumed: 700,
+        rank: 2,
+      },
+    ]);
+    expect(daily.openai).toHaveLength(2);
+    expect(daily.openai[0]).not.toHaveProperty("burnId");
+
+    expect(weekly.openai.map((entry) => entry.billedTokensConsumed)).toEqual([
+      1_050,
+      700,
+    ]);
+    expect(weekly.openai.map((entry) => entry.rank)).toEqual([1, 2]);
+
+    expect(allTime.openai.map((entry) => entry.billedTokensConsumed)).toEqual([
+      1_050,
+      700,
+    ]);
+    expect(allTime.anthropic).toMatchObject([
+      {
+        humanId: bob.humanId,
+        handle: "Bob",
+        provider: "anthropic",
+        billedTokensConsumed: 950,
+        rank: 1,
+      },
     ]);
   });
 
