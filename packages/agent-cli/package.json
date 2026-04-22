@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
-    "@token-burner/shared": "file:../shared"
+    "@token-burner/shared": "file:../shared",
+    "openai": "^4.80.0"
   }
 }

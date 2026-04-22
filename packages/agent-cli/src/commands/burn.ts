@@ -1,10 +1,17 @@
-import { providerSchema, type ProviderId } from "@token-burner/shared";
+import {
+  getBurnPreset,
+  presetIdSchema,
+  providerSchema,
+  type PresetId,
+  type ProviderId,
+} from "@token-burner/shared";
 
 import { CliArgsError, parseArgs, requireFlag } from "../args.js";
 import { ApiError, type FetchLike } from "../api/client.js";
 import { loadLocalConfig } from "../config/local-store.js";
 import { defaultBaseUrl } from "../config/defaults.js";
 import { createAnthropicAdapter } from "../providers/anthropic.js";
+import { createOpenAIAdapter } from "../providers/openai.js";
 import { resolveProviderCredentials } from "../providers/resolve-credentials.js";
 import {
   ProviderCredentialsMissingError,
@@ -30,8 +37,11 @@ const defaultAdapterFactory = (
   if (credentials.providerId === "anthropic") {
     return createAnthropicAdapter(credentials);
   }
+  if (credentials.providerId === "openai") {
+    return createOpenAIAdapter(credentials);
+  }
   throw new Error(
-    `provider ${credentials.providerId} is not supported in this build. anthropic only for now.`,
+    `provider ${credentials.providerId} is not wired in this build.`,
   );
 };
 
@@ -59,19 +69,35 @@ export const runBurnCommand = async ({
 
   let provider: ProviderId;
   let targetTokens: number;
-  let presetId: string | null;
+  let presetId: PresetId | null;
   let baseUrlOverride: string | undefined;
   try {
     const { flags } = parseArgs(args);
     provider = parseProvider(requireFlag(flags, "provider"));
-    targetTokens = parsePositiveInt(requireFlag(flags, "target"), "target");
-    presetId = flags.preset ?? null;
+    const presetFlag = flags.preset;
+    const targetFlag = flags.target;
+    if (presetFlag && targetFlag) {
+      throw new CliArgsError(
+        "pass --preset or --target, not both. the preset's target is authoritative.",
+      );
+    }
+    if (presetFlag) {
+      const parsedPresetId = presetIdSchema.parse(presetFlag);
+      presetId = parsedPresetId;
+      targetTokens = getBurnPreset(parsedPresetId).targetTokens;
+    } else {
+      presetId = null;
+      targetTokens = parsePositiveInt(
+        requireFlag(flags, "target"),
+        "target",
+      );
+    }
     baseUrlOverride = flags["base-url"];
   } catch (error) {
     if (error instanceof CliArgsError) {
       stderr.write(`${error.message}\n`);
       stderr.write(
-        "usage: token-burner-agent burn --provider anthropic --target N [--preset tier-1|tier-2|tier-3] [--base-url URL]\n",
+        "usage: token-burner-agent burn --provider anthropic (--target N | --preset tier-1|tier-2|tier-3) [--base-url URL]\n",
       );
       return 2;
     }

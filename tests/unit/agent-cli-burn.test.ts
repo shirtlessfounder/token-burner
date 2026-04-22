@@ -235,4 +235,83 @@ describe("runBurnCommand", () => {
     expect(exitCode).toBe(1);
     expect(streams.collected().stderr).toContain("no local anthropic credentials");
   });
+
+  it("resolves --preset to the preset's targetTokens and forwards presetId to the api", async () => {
+    await seedConfig();
+    const fetchCalls: Array<{ url: string; body: Record<string, unknown> }> = [];
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async (url, init) => {
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        fetchCalls.push({ url: url.toString(), body });
+        if (url.toString().endsWith("/api/burns/start")) {
+          return jsonResponse(201, {
+            burnId: "burn-preset",
+            burnSessionToken: "tb_burn_x",
+            status: "running",
+          });
+        }
+        if (url.toString().includes("/heartbeat")) {
+          return jsonResponse(200, {
+            ok: true,
+            status: "running",
+            billedTokensConsumed: body.billedTokensConsumed,
+          });
+        }
+        if (url.toString().includes("/events")) {
+          return jsonResponse(201, { accepted: true });
+        }
+        if (url.toString().includes("/finish")) {
+          return jsonResponse(200, { ok: true, status: body.status });
+        }
+        throw new Error(`unexpected fetch to ${url}`);
+      });
+    const streams = captureStreams();
+
+    const exitCode = await runBurnCommand({
+      args: [
+        "--provider",
+        "anthropic",
+        "--preset",
+        "tier-1",
+        "--base-url",
+        "https://token-burner.test",
+      ],
+      io: { stdout: streams.stdout, stderr: streams.stderr },
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      homeDir,
+      credentialsResolver: () => ({ providerId: "anthropic", apiKey: "k" }),
+      adapterFactory: () => buildFakeAdapter({ input: 50, output: 4_000 }),
+      disableParentWatch: true,
+    });
+
+    expect(exitCode).toBe(0);
+    const startCall = fetchCalls.find((call) => call.url.endsWith("/api/burns/start"));
+    expect(startCall?.body).toMatchObject({
+      targetTokens: 25_000,
+      presetId: "tier-1",
+    });
+  });
+
+  it("rejects combining --preset and --target", async () => {
+    await seedConfig();
+    const streams = captureStreams();
+
+    const exitCode = await runBurnCommand({
+      args: [
+        "--provider",
+        "anthropic",
+        "--preset",
+        "tier-1",
+        "--target",
+        "100",
+      ],
+      io: { stdout: streams.stdout, stderr: streams.stderr },
+      homeDir,
+      disableParentWatch: true,
+    });
+
+    expect(exitCode).toBe(2);
+    expect(streams.collected().stderr).toContain("--preset or --target");
+  });
 });
