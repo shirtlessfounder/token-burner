@@ -52,12 +52,6 @@ export default async function HomePage() {
       <MarqueeBanner />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-16">
-        <LeaderboardSection title="today" leaderboard={daily} />
-        <LeaderboardSection title="this week" leaderboard={weekly} />
-        <LeaderboardSection title="all time" leaderboard={allTime} />
-
-        <LiveBurnFeed entries={liveFeed} />
-
         <section className="border-2 border-ivory">
           <div className="flex items-end justify-between gap-4 border-b-2 border-ivory bg-ember px-6 py-3 text-ink">
             <h2 className="display text-2xl font-black uppercase tracking-tight sm:text-3xl">
@@ -92,6 +86,12 @@ avatar. store the owner token locally.`}
             </div>
           </div>
         </section>
+
+        <LeaderboardSection title="today" leaderboard={daily} />
+        <LeaderboardSection title="this week" leaderboard={weekly} />
+        <LeaderboardSection title="all time" leaderboard={allTime} />
+
+        <LiveBurnFeed entries={liveFeed} />
 
         <footer className="flex flex-col items-center gap-1 border-t-2 border-ivory pt-8 text-center">
           <p className="mono text-[0.6rem] uppercase tracking-[0.3em] text-bone">
