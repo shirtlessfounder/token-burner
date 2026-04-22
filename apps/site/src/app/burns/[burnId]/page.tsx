@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { ProviderId } from "@token-burner/shared";
 
 import { getPublicBurnById } from "../../../lib/db/queries";
+import { BurnLiveCounter } from "../../_components/burn-live-counter";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,6 @@ const providerLabels: Record<ProviderId, string> = {
   openai: "OpenAI",
   anthropic: "Anthropic",
 };
-
-const formatTokens = (n: number): string =>
-  n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 const formatDateTime = (date: Date): string =>
   date.toLocaleString(undefined, {
@@ -24,11 +22,6 @@ const formatDateTime = (date: Date): string =>
     minute: "2-digit",
     second: "2-digit",
   });
-
-const percent = (consumed: number, target: number): number => {
-  if (target <= 0) return 0;
-  return Math.min(100, (consumed / target) * 100);
-};
 
 export default async function BurnPage({
   params,
@@ -42,7 +35,6 @@ export default async function BurnPage({
     notFound();
   }
 
-  const pct = percent(burn.billedTokensConsumed, burn.requestedBilledTokenTarget);
   const isActive =
     burn.status === "queued" ||
     burn.status === "running" ||
@@ -65,21 +57,12 @@ export default async function BurnPage({
         </p>
       </header>
 
-      <section className="flex flex-col items-center gap-4 text-center">
-        <p className="font-mono text-6xl sm:text-7xl">
-          {formatTokens(burn.billedTokensConsumed)}
-        </p>
-        <p className="text-sm text-zinc-500">
-          of {formatTokens(burn.requestedBilledTokenTarget)} billed tokens (
-          {pct.toFixed(1)}%)
-        </p>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-900">
-          <div
-            className="h-full bg-zinc-900 dark:bg-zinc-100"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </section>
+      <BurnLiveCounter
+        burnId={burn.burnId}
+        initialBilledTokens={burn.billedTokensConsumed}
+        initialStatus={burn.status}
+        requestedBilledTokenTarget={burn.requestedBilledTokenTarget}
+      />
 
       <section className="rounded-2xl border border-zinc-200 p-5 text-sm dark:border-zinc-800">
         <dl className="grid grid-cols-2 gap-y-2">

@@ -4,6 +4,7 @@ import {
   getProviderDailyLeaderboard,
   getProviderWeeklyLeaderboard,
 } from "../lib/db/queries";
+import { BurnsRealtimeRefresher } from "./_components/burns-realtime-refresher";
 import { ClaimCodePanel } from "./_components/claim-code-panel";
 import { LeaderboardSection } from "./_components/leaderboard-section";
 import { LiveBurnFeed } from "./_components/live-burn-feed";
@@ -23,6 +24,7 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 py-16">
+      <BurnsRealtimeRefresher />
       <header className="flex flex-col gap-3 text-center">
         <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
           a public venue for wasting tokens

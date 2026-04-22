@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.104.0",
     "@token-burner/shared": "file:../../packages/shared",
     "drizzle-orm": "^0.44.7",
     "next": "16.2.4",
@@ -32,13 +33,13 @@
     "typescript": "^5"
   },
   "optionalDependencies": {
-    "lightningcss-linux-x64-gnu": "*",
-    "lightningcss-linux-arm64-gnu": "*",
-    "lightningcss-darwin-x64": "*",
-    "lightningcss-darwin-arm64": "*",
-    "@tailwindcss/oxide-linux-x64-gnu": "*",
-    "@tailwindcss/oxide-linux-arm64-gnu": "*",
+    "@tailwindcss/oxide-darwin-arm64": "*",
     "@tailwindcss/oxide-darwin-x64": "*",
-    "@tailwindcss/oxide-darwin-arm64": "*"
+    "@tailwindcss/oxide-linux-arm64-gnu": "*",
+    "@tailwindcss/oxide-linux-x64-gnu": "*",
+    "lightningcss-darwin-arm64": "*",
+    "lightningcss-darwin-x64": "*",
+    "lightningcss-linux-arm64-gnu": "*",
+    "lightningcss-linux-x64-gnu": "*"
   }
 }
