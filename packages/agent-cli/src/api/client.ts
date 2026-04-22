@@ -1,10 +1,22 @@
 import {
+  parseBurnFinishResponse,
+  parseBurnStartResponse,
+  parseHeartbeatResponse,
   parseLinkResponse,
   parseRegisterResponse,
+  parseTelemetryEventResponse,
+  type BurnFinishRequest,
+  type BurnFinishResponse,
+  type BurnStartRequest,
+  type BurnStartResponse,
+  type HeartbeatRequest,
+  type HeartbeatResponse,
   type LinkRequest,
   type LinkResponse,
   type RegisterRequest,
   type RegisterResponse,
+  type TelemetryEventRequest,
+  type TelemetryEventResponse,
 } from "@token-burner/shared";
 
 export type FetchLike = typeof fetch;
@@ -80,3 +92,45 @@ export const linkAgent = (
   options: ApiClientOptions,
 ): Promise<LinkResponse> =>
   postJson("/api/agent/link", body, parseLinkResponse, options);
+
+export const startBurn = (
+  body: BurnStartRequest,
+  options: ApiClientOptions,
+): Promise<BurnStartResponse> =>
+  postJson("/api/burns/start", body, parseBurnStartResponse, options);
+
+export const postHeartbeat = (
+  burnId: string,
+  body: HeartbeatRequest,
+  options: ApiClientOptions,
+): Promise<HeartbeatResponse> =>
+  postJson(
+    `/api/burns/${encodeURIComponent(burnId)}/heartbeat`,
+    body,
+    parseHeartbeatResponse,
+    options,
+  );
+
+export const postBurnEvent = (
+  burnId: string,
+  body: TelemetryEventRequest,
+  options: ApiClientOptions,
+): Promise<TelemetryEventResponse> =>
+  postJson(
+    `/api/burns/${encodeURIComponent(burnId)}/events`,
+    body,
+    parseTelemetryEventResponse,
+    options,
+  );
+
+export const finishBurn = (
+  burnId: string,
+  body: BurnFinishRequest,
+  options: ApiClientOptions,
+): Promise<BurnFinishResponse> =>
+  postJson(
+    `/api/burns/${encodeURIComponent(burnId)}/finish`,
+    body,
+    parseBurnFinishResponse,
+    options,
+  );
