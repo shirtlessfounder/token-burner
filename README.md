@@ -37,15 +37,19 @@ npm run test -- --run tests/unit/agent-cli-commands.test.ts tests/unit/agent-cli
 npm run typecheck
 ```
 
-## Running The CLI From This Repo
+## Running The CLI
 
-The package is not published yet. From the repo root, use the workspace binary:
+Published as [`token-burner`](https://www.npmjs.com/package/token-burner). Zero install:
 
 ```bash
-npm exec --workspace @token-burner/agent-cli token-burner-agent -- <subcommand>
+npx token-burner <subcommand>
 ```
 
-All command examples below use the shorter `token-burner-agent` form.
+To hack on the CLI in this repo, use the workspace binary instead:
+
+```bash
+npm exec --workspace token-burner token-burner -- <subcommand>
+```
 
 ## First-Time CLI Flow
 
@@ -53,19 +57,19 @@ All command examples below use the shorter `token-burner-agent` form.
 2. Register the first installation:
 
 ```bash
-token-burner-agent register --claim-code ABCD1234 --handle alembic --avatar X --agent-label codex@laptop
+token-burner register --claim-code ABCD1234 --handle alembic --avatar X --agent-label codex@laptop
 ```
 
 3. Optionally link another installation to the same human identity:
 
 ```bash
-token-burner-agent link --agent-label codex@desktop
+token-burner link --agent-label codex@desktop
 ```
 
 4. Inspect the stored local identity state:
 
 ```bash
-token-burner-agent whoami
+token-burner whoami
 ```
 
 ## Burn Command
@@ -75,13 +79,13 @@ Choose exactly one of `--target` or `--preset`.
 Custom target example using Anthropic:
 
 ```bash
-token-burner-agent burn --provider anthropic --target 50000
+token-burner burn --provider anthropic --target 50000
 ```
 
 Preset-tier example using OpenAI:
 
 ```bash
-token-burner-agent burn --provider openai --preset tier-2
+token-burner burn --provider openai --preset tier-2
 ```
 
 Current preset tiers:
@@ -103,7 +107,7 @@ export ANTHROPIC_API_KEY=...
 export OPENAI_API_KEY=...
 ```
 
-If the relevant env var is missing, `token-burner-agent burn` exits without starting a burn.
+If the relevant env var is missing, `token-burner burn` exits without starting a burn.
 
 ## Docs
 

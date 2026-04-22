@@ -36,7 +36,7 @@ export const runLinkCommand = async ({
     if (error instanceof CliArgsError) {
       stderr.write(`${error.message}\n`);
       stderr.write(
-        "usage: token-burner-agent link --agent-label LABEL [--owner-token TOKEN] [--base-url URL]\n",
+        "usage: token-burner link --agent-label LABEL [--owner-token TOKEN] [--base-url URL]\n",
       );
       return 2;
     }
