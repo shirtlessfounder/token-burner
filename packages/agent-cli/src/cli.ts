@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 import { formatBurnHelp, runBurnCommand } from "./commands/burn.js";
@@ -95,7 +96,12 @@ const isMainModule = () => {
     return false;
   }
 
-  return import.meta.url === pathToFileURL(entryPoint).href;
+  try {
+    const resolvedEntryPoint = realpathSync(entryPoint);
+    return import.meta.url === pathToFileURL(resolvedEntryPoint).href;
+  } catch {
+    return import.meta.url === pathToFileURL(entryPoint).href;
+  }
 };
 
 if (isMainModule()) {
