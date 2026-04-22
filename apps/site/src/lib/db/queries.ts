@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, sql } from "drizzle-orm";
 import { type NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import {
@@ -173,7 +173,10 @@ const getProviderLeaderboard = async ({
   windowStart?: Date;
 }): Promise<ProviderSplitLeaderboard> => {
   const queryDatabase = await resolveDatabase(database);
-  const conditions = [inArray(burns.status, terminalBurnStatusValues)];
+  const conditions = [
+    inArray(burns.status, terminalBurnStatusValues),
+    gt(burns.billedTokensConsumed, 0),
+  ];
 
   if (windowStart) {
     conditions.push(gte(burns.createdAt, windowStart));
