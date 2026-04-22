@@ -1,26 +1,118 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-ink: #050504;
+  --color-ember: #ff5a2b;
+  --color-molten: #b8270f;
+  --color-ivory: #f4ebd9;
+  --color-bone: #ada596;
+  --color-char: #1a1612;
+  --color-smoke: #242020;
+
+  --background: var(--color-ink);
+  --foreground: var(--color-ivory);
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink: var(--color-ink);
+  --color-ember: var(--color-ember);
+  --color-molten: var(--color-molten);
+  --color-ivory: var(--color-ivory);
+  --color-bone: var(--color-bone);
+  --color-char: var(--color-char);
+  --color-smoke: var(--color-smoke);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-unbounded);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--background);
+  color: var(--foreground);
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(255, 90, 43, 0.08),
+      transparent 60%
+    ),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-ember);
+  color: var(--color-ink);
+}
+
+.display {
+  font-family: var(--font-unbounded), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+}
+
+.mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.rule {
+  border-color: var(--color-ivory);
+  border-width: 2px;
+  border-style: solid;
+}
+
+.rule-ember {
+  border-color: var(--color-ember);
+  border-width: 2px;
+  border-style: solid;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid var(--color-ivory);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.chip-ember {
+  border-color: var(--color-ember);
+  color: var(--color-ember);
+}
+
+@keyframes ember-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.2); }
+}
+
+.ember-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--color-ember);
+  border-radius: 9999px;
+  box-shadow: 0 0 12px rgba(255, 90, 43, 0.8);
+  animation: ember-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee {
+  display: inline-flex;
+  animation: marquee 60s linear infinite;
 }

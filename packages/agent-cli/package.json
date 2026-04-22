@@ -1,0 +1,50 @@
+{
+  "name": "token-burner",
+  "version": "0.1.0",
+  "description": "CLI runtime for token-burner: claim an identity on the public site, then waste provider tokens publicly from your agent.",
+  "keywords": [
+    "cli",
+    "anthropic",
+    "openai",
+    "token-burner",
+    "spectacle",
+    "leaderboard"
+  ],
+  "license": "MIT",
+  "homepage": "https://token-burner-seven.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shirtlessfounder/token-burner.git",
+    "directory": "packages/agent-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/shirtlessfounder/token-burner/issues"
+  },
+  "type": "module",
+  "bin": {
+    "token-burner": "./dist/cli.js"
+  },
+  "main": "./dist/cli.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "prebuild": "cd ../.. && npm run build --workspace @token-burner/shared",
+    "build": "tsup src/cli.ts --format esm --target node20 --out-dir dist --clean --no-dts && chmod +x dist/cli.js",
+    "pretypecheck": "cd ../.. && npm run build --workspace @token-burner/shared",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "openai": "^4.80.0"
+  },
+  "devDependencies": {
+    "@token-burner/shared": "file:../shared",
+    "tsup": "^8.5.1"
+  }
+}
