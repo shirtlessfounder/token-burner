@@ -74,7 +74,10 @@ export type LeaderboardEntry = Omit<LeaderboardRow, "latestBurnCreatedAt"> & {
   rank: number;
 };
 
-export type ProviderSplitLeaderboard = Record<ProviderId, LeaderboardEntry[]>;
+export type ProviderSplitLeaderboard = {
+  entries: Record<ProviderId, LeaderboardEntry[]>;
+  totals: Record<ProviderId, number>;
+};
 
 export type LiveBurnFeedEntry = BurnRecordRow & {
   lastHeartbeatAt: Date | null;
@@ -138,12 +141,18 @@ const mapLeaderboardRows = (
   rows: LeaderboardRow[],
   limit: number,
 ): ProviderSplitLeaderboard => {
-  const splitResults = createEmptyProviderRecord<LeaderboardEntry[]>(() => []);
+  const entries = createEmptyProviderRecord<LeaderboardEntry[]>(() => []);
+  const totals = createEmptyProviderRecord<number>(() => 0);
 
   for (const provider of providerValues) {
     const providerRows = rows.filter((row) => row.provider === provider);
 
-    splitResults[provider] = providerRows.slice(0, limit).map((row, index) => ({
+    totals[provider] = providerRows.reduce(
+      (sum, row) => sum + normalizeNumericValue(row.totalBilledTokens),
+      0,
+    );
+
+    entries[provider] = providerRows.slice(0, limit).map((row, index) => ({
       humanId: row.humanId,
       handle: row.handle,
       avatarUrl: row.avatarUrl,
@@ -153,7 +162,7 @@ const mapLeaderboardRows = (
     }));
   }
 
-  return splitResults;
+  return { entries, totals };
 };
 
 const getProviderLeaderboard = async ({

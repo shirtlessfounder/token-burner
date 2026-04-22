@@ -301,7 +301,7 @@ describe("database query layer", () => {
       database,
     });
 
-    expect(daily.openai).toMatchObject([
+    expect(daily.entries.openai).toMatchObject([
       {
         humanId: alice.humanId,
         handle: "Alice",
@@ -310,7 +310,7 @@ describe("database query layer", () => {
         rank: 1,
       },
     ]);
-    expect(daily.anthropic).toMatchObject([
+    expect(daily.entries.anthropic).toMatchObject([
       {
         humanId: chloe.humanId,
         handle: "Chloe",
@@ -319,42 +319,43 @@ describe("database query layer", () => {
         rank: 1,
       },
     ]);
+    expect(daily.totals).toEqual({ openai: 600, anthropic: 900 });
 
-    expect(weekly.openai.map((entry) => entry.handle)).toEqual(["Bob", "Alice"]);
-    expect(weekly.openai.map((entry) => entry.totalBilledTokens)).toEqual([
-      800,
-      600,
+    expect(weekly.entries.openai.map((entry) => entry.handle)).toEqual([
+      "Bob",
+      "Alice",
     ]);
-    expect(weekly.anthropic.map((entry) => entry.handle)).toEqual([
+    expect(weekly.entries.openai.map((entry) => entry.totalBilledTokens)).toEqual(
+      [800, 600],
+    );
+    expect(weekly.entries.anthropic.map((entry) => entry.handle)).toEqual([
       "Chloe",
       "Alice",
     ]);
-    expect(weekly.anthropic.map((entry) => entry.totalBilledTokens)).toEqual([
-      900,
-      500,
-    ]);
+    expect(
+      weekly.entries.anthropic.map((entry) => entry.totalBilledTokens),
+    ).toEqual([900, 500]);
+    expect(weekly.totals).toEqual({ openai: 1_400, anthropic: 1_400 });
 
-    expect(allTime.openai.map((entry) => entry.handle)).toEqual([
+    expect(allTime.entries.openai.map((entry) => entry.handle)).toEqual([
       "Chloe",
       "Bob",
       "Alice",
     ]);
-    expect(allTime.openai.map((entry) => entry.totalBilledTokens)).toEqual([
-      1_200,
-      800,
-      600,
-    ]);
-    expect(allTime.anthropic.map((entry) => entry.handle)).toEqual([
+    expect(
+      allTime.entries.openai.map((entry) => entry.totalBilledTokens),
+    ).toEqual([1_200, 800, 600]);
+    expect(allTime.entries.anthropic.map((entry) => entry.handle)).toEqual([
       "Chloe",
       "Alice",
     ]);
-    expect(allTime.anthropic.map((entry) => entry.totalBilledTokens)).toEqual([
-      900,
-      500,
-    ]);
+    expect(
+      allTime.entries.anthropic.map((entry) => entry.totalBilledTokens),
+    ).toEqual([900, 500]);
+    expect(allTime.totals).toEqual({ openai: 2_600, anthropic: 1_400 });
 
-    expect(daily.openai[0]).not.toHaveProperty("burnId");
-    expect(daily.openai[0]).not.toHaveProperty("billedTokensConsumed");
+    expect(daily.entries.openai[0]).not.toHaveProperty("burnId");
+    expect(daily.entries.openai[0]).not.toHaveProperty("billedTokensConsumed");
   });
 
   it("aggregates same-human burns into one ranked leaderboard row per provider", async () => {
@@ -417,7 +418,7 @@ describe("database query layer", () => {
       database,
     });
 
-    expect(daily.openai).toMatchObject([
+    expect(daily.entries.openai).toMatchObject([
       {
         humanId: alice.humanId,
         handle: "Alice",
@@ -435,21 +436,21 @@ describe("database query layer", () => {
         rank: 2,
       },
     ]);
-    expect(daily.openai).toHaveLength(2);
-    expect(daily.openai[0]).not.toHaveProperty("burnId");
-    expect(daily.openai[0]).not.toHaveProperty("billedTokensConsumed");
+    expect(daily.entries.openai).toHaveLength(2);
+    expect(daily.entries.openai[0]).not.toHaveProperty("burnId");
+    expect(daily.entries.openai[0]).not.toHaveProperty("billedTokensConsumed");
+    expect(daily.totals).toEqual({ openai: 1_450, anthropic: 950 });
 
-    expect(weekly.openai.map((entry) => entry.totalBilledTokens)).toEqual([
-      1_050,
-      700,
-    ]);
-    expect(weekly.openai.map((entry) => entry.rank)).toEqual([1, 2]);
+    expect(weekly.entries.openai.map((entry) => entry.totalBilledTokens)).toEqual(
+      [1_050, 700],
+    );
+    expect(weekly.entries.openai.map((entry) => entry.rank)).toEqual([1, 2]);
+    expect(weekly.totals).toEqual({ openai: 1_750, anthropic: 950 });
 
-    expect(allTime.openai.map((entry) => entry.totalBilledTokens)).toEqual([
-      1_050,
-      700,
-    ]);
-    expect(allTime.anthropic).toMatchObject([
+    expect(
+      allTime.entries.openai.map((entry) => entry.totalBilledTokens),
+    ).toEqual([1_050, 700]);
+    expect(allTime.entries.anthropic).toMatchObject([
       {
         humanId: bob.humanId,
         handle: "Bob",
@@ -458,6 +459,7 @@ describe("database query layer", () => {
         rank: 1,
       },
     ]);
+    expect(allTime.totals).toEqual({ openai: 1_750, anthropic: 950 });
   });
 
   it("returns only active burns in the live feed", async () => {
