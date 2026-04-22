@@ -2,13 +2,14 @@
 
 import { pathToFileURL } from "node:url";
 
-import { runBurnCommand } from "./commands/burn.js";
+import { formatBurnHelp, runBurnCommand } from "./commands/burn.js";
 import { runLinkCommand } from "./commands/link.js";
 import { runRegisterCommand } from "./commands/register.js";
 import { runWhoamiCommand } from "./commands/whoami.js";
 
 type CommandDefinition = {
   description: string;
+  help?: string;
   run: (args: string[]) => Promise<number> | number;
 };
 
@@ -33,6 +34,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   burn: {
     description: "start a ceremonial token burn from the CLI",
+    help: formatBurnHelp(),
     run: (args) => runBurnCommand({ args }),
   },
   whoami: {
@@ -77,7 +79,9 @@ export const runCli = async (argv: string[] = process.argv.slice(2)) => {
   }
 
   if (args.includes("--help")) {
-    process.stdout.write(`${commandName}: ${commandDefinition.description}\n`);
+    process.stdout.write(
+      `${commandDefinition.help ?? `${commandName}: ${commandDefinition.description}`}\n`,
+    );
     return 0;
   }
 

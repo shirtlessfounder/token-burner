@@ -5,6 +5,7 @@ import { PassThrough } from "node:stream";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runCli } from "../../packages/agent-cli/src/cli";
 import { runLinkCommand } from "../../packages/agent-cli/src/commands/link";
 import { runRegisterCommand } from "../../packages/agent-cli/src/commands/register";
 import { runWhoamiCommand } from "../../packages/agent-cli/src/commands/whoami";
@@ -29,6 +30,28 @@ const captureStreams = () => {
       stdout: out.join(""),
       stderr: err.join(""),
     }),
+  };
+};
+
+const captureProcessWrites = () => {
+  const stdout: string[] = [];
+  const stderr: string[] = [];
+  vi.spyOn(process.stdout, "write").mockImplementation(
+    ((chunk: string | Uint8Array) => {
+      stdout.push(typeof chunk === "string" ? chunk : chunk.toString());
+      return true;
+    }) as typeof process.stdout.write,
+  );
+  vi.spyOn(process.stderr, "write").mockImplementation(
+    ((chunk: string | Uint8Array) => {
+      stderr.push(typeof chunk === "string" ? chunk : chunk.toString());
+      return true;
+    }) as typeof process.stderr.write,
+  );
+
+  return {
+    stdout: () => stdout.join(""),
+    stderr: () => stderr.join(""),
   };
 };
 
@@ -275,5 +298,25 @@ describe("agent cli whoami command", () => {
 
     expect(exitCode).toBe(1);
     expect(streams.collected().stderr).toContain("no local token-burner config");
+  });
+});
+
+describe("agent cli top-level help", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("prints detailed burn help with provider and target or preset usage", async () => {
+    const writes = captureProcessWrites();
+
+    const exitCode = await runCli(["burn", "--help"]);
+
+    expect(exitCode).toBe(0);
+    expect(writes.stdout()).toContain(
+      "token-burner-agent burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--base-url URL]",
+    );
+    expect(writes.stdout()).toContain("Use exactly one of --target or --preset.");
+    expect(writes.stdout()).toContain("tier-1 Amuse-Bouche");
+    expect(writes.stderr()).toBe("");
   });
 });
