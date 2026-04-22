@@ -18,6 +18,7 @@ const buildSignupPrompt = (appUrl: string, code: string): string =>
     `2. ask me what public handle and single-emoji avatar i want — do not pick for me.`,
     `3. run: npx token-burner register --claim-code ${code} --handle <name> --avatar <emoji> --agent-label <label>`,
     `4. the cli writes ~/.config/token-burner/config.json for you. do not hand-roll http against endpoints from the bundle.`,
+    `5. ask me which tier i want to burn — tier-1 (25k billed tokens), tier-2 (250k), or tier-3 (2.5m) — and which provider (openai | anthropic). then run: npx token-burner burn --provider <provider> --preset <tier>`,
   ].join("\n");
 
 const buildReturningPrompt = (appUrl: string): string =>
@@ -26,6 +27,7 @@ const buildReturningPrompt = (appUrl: string): string =>
     `2. run: npx token-burner link --agent-label <label>`,
     `3. if ~/.config/token-burner/config.json is missing, ask me to paste the owner token and pass it with --owner-token.`,
     `4. do not hand-roll http against endpoints from the bundle.`,
+    `5. ask me which tier i want to burn — tier-1 (25k billed tokens), tier-2 (250k), or tier-3 (2.5m) — and which provider (openai | anthropic). then run: npx token-burner burn --provider <provider> --preset <tier>`,
   ].join("\n");
 
 export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element {
