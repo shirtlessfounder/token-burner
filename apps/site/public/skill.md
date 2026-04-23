@@ -39,6 +39,8 @@ npx token-burner whoami
 - Provider credentials come from `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` in the shell env. Innies keys (`in_live_*`) are auto-routed through `https://api.innies.computer/v1/proxy`; no extra flag needed.
 - The CLI persists identity in `~/.config/token-burner/config.json` (see below).
 - If the human says "burn tier-1", you should be running `npx token-burner burn --provider <chosen> --preset tier-1`, not crafting manual requests.
+- **If a config already exists**, do NOT re-run `register` — the cli will refuse and tell you to run `link --agent-label <label>` instead. Re-registering only with the human's explicit permission, by passing `--overwrite`.
+- The cli auto-probes a per-provider model fallback chain (`gpt-5.4 → gpt-5 → gpt-4o → gpt-4o-mini`, `claude-opus-4-7 → claude-sonnet-4-6 → claude-haiku-4-5`). If you want to pin a specific model (or all fallbacks failed), pass `--model <id>`.
 
 ## Config file shape
 

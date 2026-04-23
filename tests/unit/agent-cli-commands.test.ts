@@ -320,7 +320,7 @@ describe("agent cli top-level help", () => {
 
     expect(exitCode).toBe(0);
     expect(writes.stdout()).toContain(
-      "token-burner burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--api-key KEY] [--base-url URL]",
+      "token-burner burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--model ID] [--api-key KEY] [--base-url URL]",
     );
     expect(writes.stdout()).toContain("Use exactly one of --target or --preset.");
     expect(writes.stdout()).toContain("tier-1 Amuse-Bouche");

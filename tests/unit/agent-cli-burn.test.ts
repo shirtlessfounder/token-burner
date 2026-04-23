@@ -215,7 +215,7 @@ describe("runBurnCommand", () => {
     const stderr = streams.collected().stderr;
     expect(stderr).toContain("missing required flag");
     expect(stderr).toContain(
-      "token-burner burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--api-key KEY] [--base-url URL]",
+      "token-burner burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--model ID] [--api-key KEY] [--base-url URL]",
     );
   });
 
@@ -226,7 +226,10 @@ describe("runBurnCommand", () => {
       args: ["--provider", "anthropic", "--target", "100"],
       io: { stdout: streams.stdout, stderr: streams.stderr },
       homeDir,
-      credentialsResolver: () => ({ providerId: "anthropic", apiKey: "k" }),
+      credentialsResolver: () => ({
+        providerId: "anthropic",
+        apiKey: "sk-ant-test",
+      }),
       adapterFactory: () => buildFakeAdapter({ input: 1, output: 1 }),
       disableParentWatch: true,
     });
@@ -302,7 +305,10 @@ describe("runBurnCommand", () => {
       io: { stdout: streams.stdout, stderr: streams.stderr },
       fetchImpl: fetchImpl as unknown as typeof fetch,
       homeDir,
-      credentialsResolver: () => ({ providerId: "anthropic", apiKey: "k" }),
+      credentialsResolver: () => ({
+        providerId: "anthropic",
+        apiKey: "sk-ant-test",
+      }),
       adapterFactory: () => buildFakeAdapter({ input: 50, output: 4_000 }),
       disableParentWatch: true,
     });

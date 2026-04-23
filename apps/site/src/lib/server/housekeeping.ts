@@ -29,7 +29,10 @@ type ActiveBurnRecord = {
 };
 
 const activeBurnStatuses = ["queued", "running", "stopping"] as const;
-const staleBurnTimeoutMilliseconds = 5 * 60 * 1000;
+// 60s — short enough that a crashed/killed cli only locks a human out for
+// roughly one minute before they can start a new burn (the next start call
+// sweeps the stale row before checking the active-burn invariant).
+const staleBurnTimeoutMilliseconds = 60 * 1000;
 
 const activeBurnSelection = {
   id: schema.burns.id,

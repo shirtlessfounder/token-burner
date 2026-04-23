@@ -15,7 +15,16 @@ import { loadLocalConfig } from "../config/local-store.js";
 import { defaultBaseUrl } from "../config/defaults.js";
 import { createAnthropicAdapter } from "../providers/anthropic.js";
 import { createOpenAIAdapter } from "../providers/openai.js";
+import {
+  ProviderKeyFormatError,
+  validateProviderKeyFormat,
+} from "../providers/key-format.js";
 import { resolveProviderCredentials } from "../providers/resolve-credentials.js";
+import {
+  NoAvailableModelError,
+  selectAvailableModel,
+  type AdapterFactory,
+} from "../providers/select-model.js";
 import {
   ProviderCredentialsMissingError,
   type ProviderAdapter,
@@ -29,19 +38,20 @@ export type BurnCommandOptions = {
   io?: Partial<CommandIo>;
   fetchImpl?: FetchLike;
   homeDir?: string;
-  adapterFactory?: (credentials: ProviderCredentials) => ProviderAdapter;
+  adapterFactory?: AdapterFactory;
   credentialsResolver?: typeof resolveProviderCredentials;
   disableParentWatch?: boolean;
 };
 
-const defaultAdapterFactory = (
+const defaultAdapterFactory: AdapterFactory = (
   credentials: ProviderCredentials,
+  model: string,
 ): ProviderAdapter => {
   if (credentials.providerId === "anthropic") {
-    return createAnthropicAdapter(credentials);
+    return createAnthropicAdapter(credentials, model);
   }
   if (credentials.providerId === "openai") {
-    return createOpenAIAdapter(credentials);
+    return createOpenAIAdapter(credentials, model);
   }
   throw new Error(
     `provider ${credentials.providerId} is not wired in this build.`,
@@ -80,7 +90,7 @@ export const parseTokenTarget = (value: string): number => {
 };
 
 export const formatBurnUsage = (): string =>
-  `token-burner burn --provider <${providerValues.join("|")}> (--target N | --preset ${presetIdValues.join("|")}) [--api-key KEY] [--base-url URL]`;
+  `token-burner burn --provider <${providerValues.join("|")}> (--target N | --preset ${presetIdValues.join("|")}) [--model ID] [--api-key KEY] [--base-url URL]`;
 
 export const formatBurnHelp = (): string => {
   const presetLines = burnPresets.map(
@@ -100,6 +110,9 @@ export const formatBurnHelp = (): string => {
     `  --provider <${providerValues.join("|")}>`,
     "  --target N            (accepts shorthand: 5k, 250k, 2.5m, 1b)",
     `  --preset <${presetIdValues.join("|")}>`,
+    "  --model ID            (override the model. without this, the cli probes",
+    "                         a per-provider fallback chain and uses the first",
+    "                         model your account can actually call)",
     "  --api-key KEY         (overrides $OPENAI_API_KEY / $ANTHROPIC_API_KEY,",
     "                         useful when launching from a cli agent that hides",
     "                         its own provider auth from spawned subprocesses)",
@@ -131,6 +144,7 @@ export const runBurnCommand = async ({
   let presetId: PresetId | null;
   let baseUrlOverride: string | undefined;
   let apiKeyOverride: string | undefined;
+  let modelOverride: string | undefined;
   try {
     const { flags } = parseArgs(args);
     provider = parseProvider(requireFlag(flags, "provider"));
@@ -151,6 +165,7 @@ export const runBurnCommand = async ({
     }
     baseUrlOverride = flags["base-url"];
     apiKeyOverride = flags["api-key"];
+    modelOverride = flags.model;
   } catch (error) {
     if (error instanceof CliArgsError) {
       stderr.write(`${error.message}\n`);
@@ -175,9 +190,19 @@ export const runBurnCommand = async ({
     const credentials = credentialsResolver(provider, process.env, {
       apiKeyOverride,
     });
-    adapter = adapterFactory(credentials);
+    validateProviderKeyFormat(credentials.providerId, credentials.apiKey);
+    const selectedModel = await selectAvailableModel({
+      credentials,
+      requestedModel: modelOverride,
+      adapterFactory,
+    });
+    adapter = adapterFactory(credentials, selectedModel);
   } catch (error) {
-    if (error instanceof ProviderCredentialsMissingError) {
+    if (
+      error instanceof ProviderCredentialsMissingError ||
+      error instanceof ProviderKeyFormatError ||
+      error instanceof NoAvailableModelError
+    ) {
       stderr.write(`${error.message}\n`);
       return 1;
     }

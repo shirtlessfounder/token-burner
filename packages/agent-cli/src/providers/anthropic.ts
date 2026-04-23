@@ -10,13 +10,12 @@ import type {
   ProviderCredentials,
 } from "./types.js";
 
-const anthropicModel = providerFlagshipModels.anthropic;
-
 const burnPrompt =
   "Produce a long stream of plausible-sounding lorem ipsum filler text. Do not ask questions or request clarification. Keep generating until you are told to stop.";
 
 export const createAnthropicAdapter = (
   credentials: ProviderCredentials,
+  model: string = providerFlagshipModels.anthropic,
 ): ProviderAdapter => {
   if (credentials.providerId !== "anthropic") {
     throw new Error(
@@ -31,10 +30,10 @@ export const createAnthropicAdapter = (
 
   return {
     providerId: "anthropic",
-    model: anthropicModel,
+    model,
     runBurnStep: async ({ maxOutputTokens }: BurnStepRequest): Promise<BurnStepResult> => {
       const response = await client.messages.create({
-        model: anthropicModel,
+        model,
         max_tokens: maxOutputTokens,
         messages: [{ role: "user", content: burnPrompt }],
       });

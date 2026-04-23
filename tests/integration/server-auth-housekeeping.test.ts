@@ -497,11 +497,12 @@ describe("server auth and housekeeping helpers", () => {
       avatarUrl: "https://example.com/finn.png",
     });
 
-    const freshStartedAt = new Date("2026-04-21T11:58:30.000Z");
+    // 30s before fixedNow — well inside the 60s stale window.
+    const freshStartedAt = new Date("2026-04-21T11:59:30.000Z");
     const freshBurn = await seedBurn(database, {
       ...human,
       status: "running",
-      createdAt: new Date("2026-04-21T11:40:00.000Z"),
+      createdAt: new Date("2026-04-21T11:59:30.000Z"),
       startedAt: freshStartedAt,
       lastHeartbeatAt: null,
     });
@@ -546,8 +547,9 @@ describe("server auth and housekeeping helpers", () => {
     await seedBurn(database, {
       ...human,
       status: "running",
-      createdAt: new Date("2026-04-21T11:55:00.000Z"),
-      lastHeartbeatAt: new Date("2026-04-21T11:59:00.000Z"),
+      createdAt: new Date("2026-04-21T11:59:00.000Z"),
+      // 15s before fixedNow — fresh per the 60s stale window.
+      lastHeartbeatAt: new Date("2026-04-21T11:59:45.000Z"),
     });
 
     const { ensureNoActiveBurnConflict } = await import(
