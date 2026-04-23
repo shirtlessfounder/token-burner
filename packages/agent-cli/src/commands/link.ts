@@ -1,12 +1,21 @@
 import { CliArgsError, parseArgs, requireFlag } from "../args.js";
 import { ApiError, linkAgent, type FetchLike } from "../api/client.js";
 import {
+  getLocalConfigPath,
   loadLocalConfig,
   saveLocalConfig,
   type LocalConfig,
 } from "../config/local-store.js";
 import { defaultBaseUrl } from "../config/defaults.js";
 import type { CommandIo } from "./register.js";
+
+const isWriteAccessError = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+  const code = (error as { code?: unknown }).code;
+  return code === "EACCES" || code === "EROFS" || code === "EPERM";
+};
 
 export type LinkCommandOptions = {
   args: string[];
@@ -68,7 +77,22 @@ export const runLinkCommand = async ({
       publicHandle: response.handle,
       avatar: response.avatar,
     };
-    await saveLocalConfig(nextConfig, { homeDir });
+    try {
+      await saveLocalConfig(nextConfig, { homeDir });
+    } catch (writeError) {
+      if (isWriteAccessError(writeError)) {
+        const path = getLocalConfigPath({ homeDir });
+        stderr.write(
+          `cannot write to ${path} (permission denied / read-only filesystem).\n`,
+        );
+        stderr.write(
+          `if HOME is sandboxed, point the cli at a writable directory:\n`,
+        );
+        stderr.write(`  HOME=$(mktemp -d) npx token-burner ...\n`);
+        return 1;
+      }
+      throw writeError;
+    }
 
     stdout.write(
       `linked installation ${response.agentInstallationId} to ${response.handle} ${response.avatar}\n`,

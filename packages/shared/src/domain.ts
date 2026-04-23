@@ -31,3 +31,16 @@ export const providerFlagshipModels: Record<ProviderId, string> = {
   openai: "gpt-5.4",
   anthropic: "claude-opus-4-7",
 };
+
+// Ordered most-capable → most-widely-available. The cli probes in this
+// order when no --model flag is passed and falls back on 403/404 model
+// availability errors (e.g. proxied keys whose upstream account lacks
+// the flagship model).
+export const providerModelFallbacks: Record<ProviderId, readonly string[]> = {
+  openai: ["gpt-5.4", "gpt-5", "gpt-4o", "gpt-4o-mini"],
+  anthropic: [
+    "claude-opus-4-7",
+    "claude-sonnet-4-6",
+    "claude-haiku-4-5",
+  ],
+};

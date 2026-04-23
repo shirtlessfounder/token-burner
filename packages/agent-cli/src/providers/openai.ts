@@ -10,13 +10,12 @@ import type {
   ProviderCredentials,
 } from "./types.js";
 
-const openaiModel = providerFlagshipModels.openai;
-
 const burnPrompt =
   "Produce a long stream of plausible-sounding lorem ipsum filler text. Do not ask questions or request clarification. Keep generating until you are told to stop.";
 
 export const createOpenAIAdapter = (
   credentials: ProviderCredentials,
+  model: string = providerFlagshipModels.openai,
 ): ProviderAdapter => {
   if (credentials.providerId !== "openai") {
     throw new Error(
@@ -31,10 +30,10 @@ export const createOpenAIAdapter = (
 
   return {
     providerId: "openai",
-    model: openaiModel,
+    model,
     runBurnStep: async ({ maxOutputTokens }: BurnStepRequest): Promise<BurnStepResult> => {
       const response = await client.chat.completions.create({
-        model: openaiModel,
+        model,
         max_completion_tokens: maxOutputTokens,
         messages: [{ role: "user", content: burnPrompt }],
       });

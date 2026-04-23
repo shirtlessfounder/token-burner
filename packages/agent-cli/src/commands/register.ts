@@ -1,6 +1,8 @@
 import { CliArgsError, parseArgs, requireFlag } from "../args.js";
 import { ApiError, registerAgent, type FetchLike } from "../api/client.js";
 import {
+  getLocalConfigPath,
+  loadLocalConfig,
   saveLocalConfig,
   type LocalConfig,
 } from "../config/local-store.js";
@@ -18,6 +20,38 @@ export type RegisterCommandOptions = {
   homeDir?: string;
 };
 
+const isWriteAccessError = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+  const code = (error as { code?: unknown }).code;
+  return code === "EACCES" || code === "EROFS" || code === "EPERM";
+};
+
+const writeConfigOrReportPermission = async (
+  config: LocalConfig,
+  homeDir: string | undefined,
+  stderr: NodeJS.WritableStream,
+): Promise<boolean> => {
+  try {
+    await saveLocalConfig(config, { homeDir });
+    return true;
+  } catch (error) {
+    if (isWriteAccessError(error)) {
+      const path = getLocalConfigPath({ homeDir });
+      stderr.write(
+        `cannot write to ${path} (permission denied / read-only filesystem).\n`,
+      );
+      stderr.write(
+        `if HOME is sandboxed, point the cli at a writable directory:\n`,
+      );
+      stderr.write(`  HOME=$(mktemp -d) npx token-burner ...\n`);
+      return false;
+    }
+    throw error;
+  }
+};
+
 export const runRegisterCommand = async ({
   args,
   io,
@@ -32,6 +66,7 @@ export const runRegisterCommand = async ({
   let avatar: string;
   let agentLabel: string;
   let baseUrl: string;
+  let overwrite: boolean;
   try {
     const { flags } = parseArgs(args);
     claimCode = requireFlag(flags, "claim-code");
@@ -39,15 +74,37 @@ export const runRegisterCommand = async ({
     avatar = requireFlag(flags, "avatar");
     agentLabel = requireFlag(flags, "agent-label");
     baseUrl = flags["base-url"] ?? defaultBaseUrl;
+    overwrite = flags.overwrite !== undefined;
   } catch (error) {
     if (error instanceof CliArgsError) {
       stderr.write(`${error.message}\n`);
       stderr.write(
-        "usage: token-burner register --claim-code CODE --handle NAME --avatar X --agent-label LABEL [--base-url URL]\n",
+        "usage: token-burner register --claim-code CODE --handle NAME --avatar X --agent-label LABEL [--base-url URL] [--overwrite]\n",
       );
       return 2;
     }
     throw error;
+  }
+
+  if (!overwrite) {
+    const existing = await loadLocalConfig({ homeDir });
+    if (existing) {
+      const path = getLocalConfigPath({ homeDir });
+      const handleSummary = existing.publicHandle
+        ? ` for handle "${existing.publicHandle}"`
+        : "";
+      stderr.write(
+        `local token-burner config already exists at ${path}${handleSummary}.\n`,
+      );
+      stderr.write(
+        "to add this installation to that identity instead, run:\n",
+      );
+      stderr.write(`  npx token-burner link --agent-label ${agentLabel}\n`);
+      stderr.write(
+        "to wipe the existing identity and register a new one, re-run with --overwrite.\n",
+      );
+      return 1;
+    }
   }
 
   try {
@@ -64,7 +121,9 @@ export const runRegisterCommand = async ({
       publicHandle: response.handle,
       avatar: response.avatar,
     };
-    await saveLocalConfig(config, { homeDir });
+    if (!(await writeConfigOrReportPermission(config, homeDir, stderr))) {
+      return 1;
+    }
 
     stdout.write(
       `registered as ${response.handle} ${response.avatar} (${response.humanId})\n`,
