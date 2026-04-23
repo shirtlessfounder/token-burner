@@ -92,6 +92,24 @@ describe("resolveProviderCredentials", () => {
       resolveProviderCredentials("openai", { OPENAI_API_KEY: "   " }),
     ).toThrow(ProviderCredentialsMissingError);
   });
+
+  it("uses apiKeyOverride when env is empty (cli-agent subprocess case)", () => {
+    const result = resolveProviderCredentials(
+      "anthropic",
+      {},
+      { apiKeyOverride: "sk-ant-explicit" },
+    );
+    expect(result.apiKey).toBe("sk-ant-explicit");
+  });
+
+  it("apiKeyOverride wins over env when both are present", () => {
+    const result = resolveProviderCredentials(
+      "openai",
+      { OPENAI_API_KEY: "sk-from-env" },
+      { apiKeyOverride: "sk-from-flag" },
+    );
+    expect(result.apiKey).toBe("sk-from-flag");
+  });
 });
 
 describe("runBurnCommand", () => {
@@ -197,7 +215,7 @@ describe("runBurnCommand", () => {
     const stderr = streams.collected().stderr;
     expect(stderr).toContain("missing required flag");
     expect(stderr).toContain(
-      "token-burner burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--base-url URL]",
+      "token-burner burn --provider <openai|anthropic> (--target N | --preset tier-1|tier-2|tier-3) [--api-key KEY] [--base-url URL]",
     );
   });
 
