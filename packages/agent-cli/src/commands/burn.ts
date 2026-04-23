@@ -80,7 +80,7 @@ export const parseTokenTarget = (value: string): number => {
 };
 
 export const formatBurnUsage = (): string =>
-  `token-burner burn --provider <${providerValues.join("|")}> (--target N | --preset ${presetIdValues.join("|")}) [--base-url URL]`;
+  `token-burner burn --provider <${providerValues.join("|")}> (--target N | --preset ${presetIdValues.join("|")}) [--api-key KEY] [--base-url URL]`;
 
 export const formatBurnHelp = (): string => {
   const presetLines = burnPresets.map(
@@ -98,8 +98,11 @@ export const formatBurnHelp = (): string => {
     "",
     "Options:",
     `  --provider <${providerValues.join("|")}>`,
-    "  --target N",
+    "  --target N            (accepts shorthand: 5k, 250k, 2.5m, 1b)",
     `  --preset <${presetIdValues.join("|")}>`,
+    "  --api-key KEY         (overrides $OPENAI_API_KEY / $ANTHROPIC_API_KEY,",
+    "                         useful when launching from a cli agent that hides",
+    "                         its own provider auth from spawned subprocesses)",
     "  --base-url URL",
     "",
     "Preset tiers:",
@@ -127,6 +130,7 @@ export const runBurnCommand = async ({
   let targetTokens: number;
   let presetId: PresetId | null;
   let baseUrlOverride: string | undefined;
+  let apiKeyOverride: string | undefined;
   try {
     const { flags } = parseArgs(args);
     provider = parseProvider(requireFlag(flags, "provider"));
@@ -146,6 +150,7 @@ export const runBurnCommand = async ({
       targetTokens = parseTokenTarget(requireFlag(flags, "target"));
     }
     baseUrlOverride = flags["base-url"];
+    apiKeyOverride = flags["api-key"];
   } catch (error) {
     if (error instanceof CliArgsError) {
       stderr.write(`${error.message}\n`);
@@ -167,7 +172,9 @@ export const runBurnCommand = async ({
 
   let adapter: ProviderAdapter;
   try {
-    const credentials = credentialsResolver(provider);
+    const credentials = credentialsResolver(provider, process.env, {
+      apiKeyOverride,
+    });
     adapter = adapterFactory(credentials);
   } catch (error) {
     if (error instanceof ProviderCredentialsMissingError) {

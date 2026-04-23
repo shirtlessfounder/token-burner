@@ -24,8 +24,20 @@ export type ProviderCredentials = {
 
 export class ProviderCredentialsMissingError extends Error {
   constructor(providerId: ProviderId) {
+    const envVar =
+      providerId === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
     super(
-      `no local ${providerId} credentials found. token-burner only uses official provider credentials from your environment.`,
+      [
+        `no local ${providerId} credentials found.`,
+        `token-burner reads ${envVar} from your shell environment.`,
+        ``,
+        `if you launched this from a cli agent (claude code, codex, cursor, etc.):`,
+        `most agents do NOT pass their own provider auth to spawned subprocesses,`,
+        `so ${envVar} can be empty inside Bash/npx even while the agent is talking`,
+        `to ${providerId}. either:`,
+        `  (a) set ${envVar} in your shell BEFORE launching the agent, then restart it, or`,
+        `  (b) pass the key explicitly: token-burner burn --api-key <KEY> ...`,
+      ].join("\n"),
     );
     this.name = "ProviderCredentialsMissingError";
   }

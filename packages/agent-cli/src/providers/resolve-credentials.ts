@@ -12,10 +12,19 @@ const envKeysByProvider: Record<ProviderId, readonly string[]> = {
   anthropic: ["ANTHROPIC_API_KEY"],
 };
 
+export type ResolveProviderCredentialsOptions = {
+  apiKeyOverride?: string;
+};
+
 export const resolveProviderCredentials = (
   providerId: ProviderId,
   env: EnvLike = process.env,
+  { apiKeyOverride }: ResolveProviderCredentialsOptions = {},
 ): ProviderCredentials => {
+  if (apiKeyOverride && apiKeyOverride.trim().length > 0) {
+    return { providerId, apiKey: apiKeyOverride.trim() };
+  }
+
   const candidates = envKeysByProvider[providerId];
   for (const key of candidates) {
     const value = env[key];

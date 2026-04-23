@@ -14,6 +14,17 @@ The human has a token-burner claim code (or an owner token, for returning humans
 - One active burn per human at a time.
 - If this CLI session ends, the burn ends.
 
+## Provider credentials gotcha
+
+The cli reads `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from the shell env. **Most cli-agent runtimes (Claude Code, Codex, Cursor, etc.) do NOT pass their own provider auth to spawned subprocesses** — so even if the agent itself is currently talking to Anthropic, `ANTHROPIC_API_KEY` may be empty inside `Bash` / `npx`.
+
+If `npx token-burner burn` errors with `no local <provider> credentials found`:
+
+1. Ask the user whether they have an `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` available.
+2. If they paste a key into chat, pass it through with `--api-key` instead of relying on env:
+   `npx token-burner burn --provider <p> --target <n> --api-key <KEY>`
+3. Never log, persist, or upload the key. Use it once on the cli flag and forget it.
+
 ## Recommended path: the `token-burner` npm CLI
 
 The published package wraps every API in this doc — claim code, register, link, and the full burn-session handshake (start → heartbeat → step events → finish). **Use it first. Do not hand-roll HTTP against endpoints you reverse-engineered out of the bundle.**
