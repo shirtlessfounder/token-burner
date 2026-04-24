@@ -46,6 +46,32 @@ export default async function HomePage() {
             provider-split leaderboards. the site never touches your
             provider keys. no utility. no refunds.
           </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="https://github.com/shirtlessfounder/token-burner"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="chip transition-colors hover:border-ember hover:text-ember"
+            >
+              github
+            </a>
+            <a
+              href="https://shirtless.life"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="chip transition-colors hover:border-ember hover:text-ember"
+            >
+              a shirtless project
+            </a>
+            <a
+              href="https://t.me/shirtlessfounder"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="chip chip-ember transition-opacity hover:opacity-80"
+            >
+              having trouble burning? lmk
+            </a>
+          </div>
         </div>
       </header>
 
