@@ -16,6 +16,7 @@
     "@token-burner/shared": "file:../../packages/shared",
     "drizzle-orm": "^0.44.7",
     "framer-motion": "^12.38.0",
+    "js-tiktoken": "^1.0.21",
     "next": "16.2.4",
     "pg": "^8.16.3",
     "react": "19.2.4",

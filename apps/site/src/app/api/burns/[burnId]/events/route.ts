@@ -48,7 +48,12 @@ export async function POST(
       eventPayload: parsed.eventPayload,
       billedTokensConsumed: parsed.billedTokensConsumed,
     });
-    const body = parseTelemetryEventResponse(result);
+    const body = parseTelemetryEventResponse({
+      accepted: result.accepted,
+      verifiedStepTokens: result.verifiedStepTokens,
+      cumulativeTokens: result.cumulativeTokens,
+      verified: result.verified,
+    });
     return NextResponse.json(body, { status: 201 });
   } catch (error) {
     if (error instanceof BurnSessionInvalidError) {

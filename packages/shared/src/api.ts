@@ -110,6 +110,9 @@ export const parseTelemetryEventRequest = (
 
 export const telemetryEventResponseSchema = z.object({
   accepted: z.boolean(),
+  verifiedStepTokens: z.number().int().nonnegative().optional(),
+  cumulativeTokens: z.number().int().nonnegative(),
+  verified: z.boolean(),
 });
 export type TelemetryEventResponse = z.infer<typeof telemetryEventResponseSchema>;
 export const parseTelemetryEventResponse = (

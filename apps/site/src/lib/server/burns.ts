@@ -16,6 +16,7 @@ import {
 import * as schema from "../db/schema";
 import { verifyOwnerToken } from "./auth";
 import { ensureNoActiveBurnConflict } from "./housekeeping";
+import { countOutputTokens } from "./tokenize";
 
 type TokenBurnerDatabase = NodePgDatabase<typeof schema>;
 
@@ -146,6 +147,7 @@ type ActiveBurnMatch = {
   status: BurnStatus;
   billedTokensConsumed: number;
   requestedBilledTokenTarget: number;
+  provider: ProviderId;
 };
 
 const findActiveBurnBySession = async (
@@ -159,6 +161,7 @@ const findActiveBurnBySession = async (
       status: schema.burns.status,
       billedTokensConsumed: schema.burns.billedTokensConsumed,
       requestedBilledTokenTarget: schema.burns.requestedBilledTokenTarget,
+      provider: schema.burns.provider,
     })
     .from(schema.burns)
     .where(
@@ -241,6 +244,19 @@ export type RecordBurnEventInput = {
 
 export type RecordBurnEventResult = {
   accepted: true;
+  verifiedStepTokens?: number;
+  cumulativeTokens: number;
+  verified: boolean;
+};
+
+const extractContent = (
+  eventPayload: Record<string, unknown>,
+): string | null => {
+  const value = eventPayload.content;
+  if (typeof value !== "string" || value.length === 0) {
+    return null;
+  }
+  return value;
 };
 
 export const recordBurnEvent = async ({
@@ -263,28 +279,48 @@ export const recordBurnEvent = async ({
     throw new BurnSessionInvalidError();
   }
 
+  const content = extractContent(eventPayload);
+  const verifiedStepTokens =
+    content === null ? null : countOutputTokens(existing.provider, content);
+
   await queryDatabase.insert(schema.burnEvents).values({
     burnId,
     eventType,
     eventPayload,
+    verifiedOutputTokens: verifiedStepTokens,
     createdAt: now,
   });
 
-  if (typeof billedTokensConsumed === "number") {
-    const safeBilled = Math.min(
+  let nextCumulative = existing.billedTokensConsumed;
+
+  if (verifiedStepTokens !== null) {
+    nextCumulative = Math.min(
+      existing.billedTokensConsumed + verifiedStepTokens,
+      existing.requestedBilledTokenTarget,
+    );
+  } else if (typeof billedTokensConsumed === "number") {
+    nextCumulative = Math.min(
       Math.max(billedTokensConsumed, existing.billedTokensConsumed),
       existing.requestedBilledTokenTarget,
     );
+  }
+
+  if (nextCumulative !== existing.billedTokensConsumed) {
     await queryDatabase
       .update(schema.burns)
       .set({
-        billedTokensConsumed: safeBilled,
+        billedTokensConsumed: nextCumulative,
         lastHeartbeatAt: now,
       })
       .where(eq(schema.burns.id, burnId));
   }
 
-  return { accepted: true };
+  return {
+    accepted: true,
+    verifiedStepTokens: verifiedStepTokens ?? undefined,
+    cumulativeTokens: nextCumulative,
+    verified: verifiedStepTokens !== null,
+  };
 };
 
 export type FinishBurnInput = {

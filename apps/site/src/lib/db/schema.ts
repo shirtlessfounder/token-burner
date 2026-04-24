@@ -152,6 +152,9 @@ export const burnEvents = pgTable("burn_events", {
     .$type<Record<string, unknown>>()
     .notNull()
     .default(sql`'{}'::jsonb`),
+  verifiedOutputTokens: bigint("verified_output_tokens", {
+    mode: "number",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

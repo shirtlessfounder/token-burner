@@ -10,7 +10,7 @@ import {
 
 import * as schema from "./schema";
 
-const { burns, humans } = schema;
+const { burns, burnEvents, humans } = schema;
 
 const dayInMilliseconds = 24 * 60 * 60 * 1000;
 const weekInMilliseconds = 7 * dayInMilliseconds;
@@ -330,6 +330,57 @@ export const getPublicProfileByHandle = async (
     providerTotals,
     recentBurns: recentBurns.map(mapBurnSummary),
   };
+};
+
+export type BurnContentEvent = {
+  eventId: string;
+  stepIndex: number | null;
+  content: string;
+  verifiedOutputTokens: number | null;
+  createdAt: Date;
+};
+
+export const getBurnContentEvents = async (
+  burnId: string,
+  { database, limit = 200 }: QueryOptions & { limit?: number } = {},
+): Promise<BurnContentEvent[]> => {
+  if (!uuidPattern.test(burnId)) {
+    return [];
+  }
+
+  const queryDatabase = await resolveDatabase(database);
+
+  const rows = await queryDatabase
+    .select({
+      eventId: burnEvents.id,
+      eventPayload: burnEvents.eventPayload,
+      verifiedOutputTokens: burnEvents.verifiedOutputTokens,
+      createdAt: burnEvents.createdAt,
+    })
+    .from(burnEvents)
+    .where(eq(burnEvents.burnId, burnId))
+    .orderBy(asc(burnEvents.createdAt))
+    .limit(limit);
+
+  const results: BurnContentEvent[] = [];
+  for (const row of rows) {
+    const content = row.eventPayload?.content;
+    if (typeof content !== "string" || content.length === 0) {
+      continue;
+    }
+    const stepIndexRaw = row.eventPayload?.stepIndex;
+    const stepIndex =
+      typeof stepIndexRaw === "number" ? stepIndexRaw : null;
+    results.push({
+      eventId: row.eventId,
+      stepIndex,
+      content,
+      verifiedOutputTokens: row.verifiedOutputTokens,
+      createdAt: row.createdAt,
+    });
+  }
+
+  return results;
 };
 
 export const getPublicBurnById = async (
