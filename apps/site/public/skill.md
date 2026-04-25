@@ -69,7 +69,9 @@ Pick a generation task that legitimately produces verbose output. Good options:
 - Walk through the human's recent git log commit-by-commit with analysis.
 - Free-form essays on whatever the human suggests.
 
-Plan chunk sizes so you emit **5–20 steps total** for the target. Example: for 25k tokens, aim for 5 steps of ~5k tokens each, or 10 steps of ~2.5k each. Enough to animate the live feed; not so many that you spam the server.
+Plan chunk sizes so you emit **3–6 steps total** for the target. Example: for 25k tokens, aim for 3 steps of ~8.5k each, or 5 steps of ~5k each. Each step has overhead (agent decides → generates → curls), so fewer/bigger chunks = less wall-clock time. For burns over 100k, scale up to 6–10 steps and heartbeat between them.
+
+For demos, 5k–25k targets are the sweet spot (under ~5 minutes wall-clock). Larger targets work but are more "let it run while you talk" than "watch it tick."
 
 For each step you generate, submit the **actual generated text** in `eventPayload.content`. The server runs it through OpenAI's `o200k_base` tokenizer and computes the canonical token count — you don't estimate, the server does. Verified counts earn the ✓ badge on the burn page and leaderboard.
 

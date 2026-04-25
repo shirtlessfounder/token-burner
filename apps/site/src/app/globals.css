@@ -107,6 +107,21 @@ body {
   animation: ember-pulse 1.2s ease-in-out infinite;
 }
 
+@keyframes burning-flame {
+  0%, 100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 6px rgba(255, 90, 43, 0.8)); }
+  25% { transform: scale(1.08) rotate(1deg); filter: drop-shadow(0 0 10px rgba(255, 90, 43, 1)); }
+  50% { transform: scale(0.96) rotate(2deg); filter: drop-shadow(0 0 8px rgba(255, 90, 43, 0.9)); }
+  75% { transform: scale(1.04) rotate(-1deg); filter: drop-shadow(0 0 12px rgba(255, 90, 43, 1)); }
+}
+
+.burning-flame {
+  display: inline-block;
+  font-size: 1.5rem;
+  line-height: 1;
+  animation: burning-flame 1.6s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
