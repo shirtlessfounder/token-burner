@@ -135,6 +135,21 @@ Content-Type: application/json
 
 If steps are short (<20s each), the event POSTs serve as implicit heartbeats and you can skip explicit ones. For long steps, interleave heartbeats.
 
+### Failure handling
+
+When an HTTP call to the burn API fails, do NOT stop and ask the human "what do I do?". Use this table:
+
+| status | meaning | action |
+|---|---|---|
+| 5xx | server hiccup | retry the same POST with 1s, 2s, 4s backoff (3 attempts max). if all 3 fail, treat as persistent (see below). |
+| 413 | content too big (>500KB) | halve next chunk size. retry the SAME step's POST once with smaller content. |
+| 429 | rate limited | back off `Retry-After` seconds (default 30s if header missing), then continue the same POST. |
+| 401 | session invalidated (e.g. burn auto-interrupted server-side) | bail. POST `/finish` with `status=failed`. tell the human "burn session lost server-side, starting fresh would re-register." |
+| timeout / network error | transient | retry up to 3x with backoff. same as 5xx. |
+| persistent failure (3 retries failed) | give up | POST `/finish` with `status=failed`. summarize what happened to the human. |
+
+**Crucially**: do NOT ask the human for an API key, do NOT fall back to `npx token-burner burn`, do NOT switch to estimating tokens locally instead of submitting content. None of those address the actual error. Retry-or-finish is the entire decision tree.
+
 ### Step 4: finish
 
 When you hit the target, the human aborts, or anything fails:
