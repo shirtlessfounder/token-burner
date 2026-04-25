@@ -44,6 +44,7 @@ export async function POST(request: Request): Promise<Response> {
       provider: parsed.provider,
       targetTokens: parsed.targetTokens,
       presetId: parsed.presetId ?? null,
+      model: parsed.model,
     });
     const body = parseBurnStartResponse(result);
     return NextResponse.json(body, { status: 201 });

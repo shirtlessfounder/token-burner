@@ -98,6 +98,7 @@ export type StartBurnInput = {
   provider: ProviderId;
   targetTokens: number;
   presetId?: PresetId | null;
+  model?: string | null;
 };
 
 export type StartBurnResult = {
@@ -112,6 +113,7 @@ export const startBurn = async ({
   provider,
   targetTokens,
   presetId,
+  model,
   database,
   now = new Date(),
 }: TimestampedDatabaseOptions & StartBurnInput): Promise<StartBurnResult> => {
@@ -132,6 +134,10 @@ export const startBurn = async ({
   });
 
   const burnSessionToken = generateBurnSessionTokenValue();
+  const modelToRecord =
+    typeof model === "string" && model.trim().length > 0
+      ? model.trim()
+      : providerFlagshipModels[provider];
 
   const [burn] = await queryDatabase
     .insert(schema.burns)
@@ -139,7 +145,7 @@ export const startBurn = async ({
       humanId: verified.humanId,
       agentInstallationId,
       provider,
-      model: providerFlagshipModels[provider],
+      model: modelToRecord,
       presetId: presetId ?? null,
       requestedBilledTokenTarget: targetTokens,
       billedTokensConsumed: 0,

@@ -66,6 +66,7 @@ export const burnStartRequestSchema = z.object({
   provider: providerSchema,
   targetTokens: positiveTokenCountSchema,
   presetId: presetIdSchema.nullish(),
+  model: nonEmptyStringSchema.optional(),
 });
 export type BurnStartRequest = z.infer<typeof burnStartRequestSchema>;
 export const parseBurnStartRequest = (input: unknown): BurnStartRequest =>
