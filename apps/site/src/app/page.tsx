@@ -4,6 +4,7 @@ import {
   getProviderDailyLeaderboard,
   getProviderWeeklyLeaderboard,
 } from "../lib/db/queries";
+import { interruptAllStaleBurns } from "../lib/server/housekeeping";
 import { BurnsRealtimeRefresher } from "./_components/burns-realtime-refresher";
 import { LeaderboardSection } from "./_components/leaderboard-section";
 import { LiveBurnFeed } from "./_components/live-burn-feed";
@@ -15,6 +16,11 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? "https://token-burner-seven.vercel.app";
+
+  // Opportunistic sweep: kill any "active" burns whose heartbeats stopped
+  // > 60s ago (agent session crashed/cancelled mid-burn). Keeps the live
+  // feed honest without needing a cron. Cheap update if nothing matches.
+  await interruptAllStaleBurns();
 
   const [daily, weekly, allTime, liveFeed] = await Promise.all([
     getProviderDailyLeaderboard({ limit: 10 }),

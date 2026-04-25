@@ -98,6 +98,32 @@ export const interruptStaleBurns = async ({
     .returning(activeBurnSelection);
 };
 
+// Sweep across ALL humans. Used by read paths (homepage, live feed) so
+// orphaned burns from killed agent sessions disappear from the UI without
+// needing a separate cron — the next visitor pays a tiny update cost and
+// the DB matches reality.
+export const interruptAllStaleBurns = async ({
+  database,
+  now = new Date(),
+}: TimestampedDatabaseOptions = {}): Promise<ActiveBurnRecord[]> => {
+  const queryDatabase = await resolveDatabase(database);
+  const staleCutoff = new Date(now.getTime() - staleBurnTimeoutMilliseconds);
+
+  return queryDatabase
+    .update(schema.burns)
+    .set({
+      status: "interrupted",
+      finishedAt: now,
+    })
+    .where(
+      and(
+        inArray(schema.burns.status, activeBurnStatuses),
+        lte(activeBurnTimestampFallback, staleCutoff),
+      ),
+    )
+    .returning(activeBurnSelection);
+};
+
 export const findActiveBurnForHuman = async ({
   humanId,
   database,
