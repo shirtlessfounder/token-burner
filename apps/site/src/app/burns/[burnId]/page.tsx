@@ -7,6 +7,7 @@ import {
   getBurnContentEvents,
   getPublicBurnById,
 } from "../../../lib/db/queries";
+import { BurnContentGallery } from "../../_components/burn-content-gallery";
 import { BurnLiveCounter } from "../../_components/burn-live-counter";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +43,10 @@ export default async function BurnPage({
   const verifiedEventCount = contentEvents.filter(
     (event) => typeof event.verifiedOutputTokens === "number",
   ).length;
+  const totalEventCount = contentEvents.length;
   const hasVerifiedEvents = verifiedEventCount > 0;
+  const fullyVerified =
+    totalEventCount > 0 && verifiedEventCount === totalEventCount;
 
   const isActive =
     burn.status === "queued" ||
@@ -72,12 +76,19 @@ export default async function BurnPage({
         </h1>
         <p className="mono text-[0.7rem] uppercase tracking-[0.3em] text-bone">
           {providerLabels[burn.provider]} · {burn.model}
-          {hasVerifiedEvents ? (
+          {fullyVerified ? (
             <span
               className="ml-2 text-ember"
-              title="Token counts verified server-side via provider tokenizer"
+              title="Every step's token count verified server-side via provider tokenizer"
             >
               ✓ verified
+            </span>
+          ) : hasVerifiedEvents ? (
+            <span
+              className="ml-2 text-bone"
+              title={`${verifiedEventCount} of ${totalEventCount} steps verified server-side`}
+            >
+              ⚠ partial ✓
             </span>
           ) : null}
         </p>
@@ -128,46 +139,11 @@ export default async function BurnPage({
         </dl>
       </section>
 
-      {contentEvents.length > 0 ? (
-        <section className="border-2 border-ivory">
-          <div className="flex items-center justify-between border-b-2 border-ivory bg-char px-5 py-3">
-            <p className="mono text-[0.65rem] uppercase tracking-[0.3em] text-bone">
-              generated content ({contentEvents.length} step
-              {contentEvents.length === 1 ? "" : "s"})
-            </p>
-            {hasVerifiedEvents ? (
-              <span className="mono text-[0.6rem] uppercase tracking-[0.3em] text-ember">
-                {verifiedEventCount} ✓ verified
-              </span>
-            ) : null}
-          </div>
-          <ol className="flex flex-col">
-            {contentEvents.map((event, index) => {
-              const stepNumber = event.stepIndex ?? index + 1;
-              return (
-                <li
-                  key={event.eventId}
-                  className="border-b-2 border-ivory px-5 py-4 last:border-b-0"
-                >
-                  <div className="mb-2 flex items-center justify-between gap-4">
-                    <p className="mono text-[0.6rem] uppercase tracking-[0.3em] text-bone">
-                      step {stepNumber}
-                    </p>
-                    {typeof event.verifiedOutputTokens === "number" ? (
-                      <p className="mono text-[0.6rem] uppercase tracking-[0.3em] text-ember">
-                        {event.verifiedOutputTokens.toLocaleString()} ✓
-                      </p>
-                    ) : null}
-                  </div>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-ivory">
-                    {event.content}
-                  </p>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-      ) : null}
+      <BurnContentGallery
+        burnId={burn.burnId}
+        initialEvents={contentEvents}
+        isActive={isActive}
+      />
     </main>
   );
 }
