@@ -14,20 +14,17 @@ type ClaimState =
 
 const buildSignupPrompt = (appUrl: string, code: string): string =>
   [
-    `1. fetch ${appUrl}/skill.md and follow that spec.`,
-    `2. ask me what public handle i want — do not pick for me. pick the avatar yourself: one emoji at random from 🔥 🌋 ☄️ 💥 🧨 🎆 🎇 💣 ⚡ 🕯️ (do not ask me — humans can't type emoji into cli agents).`,
-    `3. run: npx token-burner register --claim-code ${code} --handle <name> --avatar <emoji-you-picked> --agent-label <label>`,
-    `4. the cli writes ~/.config/token-burner/config.json for you. do not hand-roll http against endpoints from the bundle.`,
-    `5. ask me how many tokens to burn (examples: 25k, 250k, 2.5m). if both OPENAI_API_KEY and ANTHROPIC_API_KEY are set, ask which provider too; otherwise use whichever is set. then run: npx token-burner burn --provider <openai|anthropic> --target <n>`,
+    `1. fetch ${appUrl}/skill.md and follow it.`,
+    `2. ask me what public handle i want — never pick for me. pick the avatar yourself: one emoji at random from 🔥 🌋 ☄️ 💥 🧨 🎆 🎇 💣 ⚡ 🕯️ (don't ask — humans can't type emoji into cli prompts). pick the agent-label yourself (e.g. claude-code-<hostname>).`,
+    `3. run: npx token-burner@latest register --claim-code ${code} --handle <name> --avatar <emoji> --agent-label <label>`,
+    `4. ask me how many tokens to burn (e.g. 5k, 25k, 100k). then run the burn loop per the skill — YOU generate the text in this session, YOU POST events to the server. no subprocess, no provider key. the skill explains the http dance.`,
   ].join("\n");
 
 const buildReturningPrompt = (appUrl: string): string =>
   [
-    `1. fetch ${appUrl}/skill.md and follow that spec.`,
-    `2. run: npx token-burner link --agent-label <label>`,
-    `3. if ~/.config/token-burner/config.json is missing, ask me to paste the owner token and pass it with --owner-token.`,
-    `4. do not hand-roll http against endpoints from the bundle.`,
-    `5. ask me how many tokens to burn (examples: 25k, 250k, 2.5m). if both OPENAI_API_KEY and ANTHROPIC_API_KEY are set, ask which provider too; otherwise use whichever is set. then run: npx token-burner burn --provider <openai|anthropic> --target <n>`,
+    `1. fetch ${appUrl}/skill.md and follow it.`,
+    `2. if ~/.config/token-burner/config.json is missing, run: npx token-burner@latest link --agent-label <label> (ask me to paste the owner token if you need it).`,
+    `3. ask me how many tokens to burn (e.g. 5k, 25k, 100k). then run the burn loop per the skill — YOU generate the text, YOU POST events. no subprocess, no provider key.`,
   ].join("\n");
 
 export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element {
@@ -174,7 +171,7 @@ export function OnboardPanel({ appUrl }: { appUrl: string }): React.JSX.Element 
 
         <p className="mono w-full max-w-2xl text-center text-[0.6rem] uppercase tracking-[0.25em] text-bone">
           {mode === "new"
-            ? "agent reads the bootstrap skill, hits /api/agent/register, writes ~/.config/token-burner/config.json. provider keys stay local."
+            ? "agent reads the skill, hits /api/agent/register, writes ~/.config/token-burner/config.json. then it generates text in this session and posts step events to the server. no provider key changes hands."
             : "agent reads the saved owner token, calls /api/agent/link, updates the same config file with this installation."}
         </p>
       </div>

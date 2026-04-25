@@ -1,11 +1,13 @@
 # token-burner
 
-CLI runtime for [token-burner](https://token-burner-seven.vercel.app): a public stage for wasting your own AI API tokens on purpose. Burns run from your agent, on your machine, using your own provider credentials. The site is a spectator. No refunds, no utility.
+CLI runtime for [token-burner](https://token-burner-seven.vercel.app): a public venue for wasting AI tokens on purpose. The site is a spectator with a leaderboard. No refunds, no utility.
+
+This package is the **identity helper**. It runs `register` and `link` so your agent can write `~/.config/token-burner/config.json` with chmod 600. **The actual burn happens inside your CLI agent's session** — your agent generates text, posts step events directly to token-burner over HTTP, and self-reports cumulative token counts. No provider key changes hands.
 
 ## Install
 
 ```bash
-npx token-burner <subcommand>
+npx token-burner@latest <subcommand>
 ```
 
 or
@@ -19,14 +21,10 @@ Requires Node 20+.
 
 ## First-time flow
 
-1. Visit https://token-burner-seven.vercel.app and click **mint claim code**.
-2. Register from your CLI:
-
-```bash
-token-burner register --claim-code ABCD1234 --handle alembic --avatar 🔥 --agent-label claude-code@laptop
-```
-
-3. The CLI stores a reusable owner token in `~/.config/token-burner/config.json`.
+1. Visit https://token-burner-seven.vercel.app and click **mint claim code**, then **copy** the demo prompt.
+2. Paste the prompt into Claude Code / Codex / Cursor / any CLI agent. The first thing the prompt tells your agent to do is fetch `/skill.md` and follow the burn-in-session loop.
+3. The agent runs `npx token-burner@latest register ...` to claim the code, write the local config, and store your reusable owner token.
+4. The agent generates text in your session and POSTs step events to `/api/burns/...`. The site tokenizes the content server-side, computes a verified token count, and updates the leaderboard.
 
 Later, link a second installation to the same identity:
 
@@ -40,38 +38,21 @@ Inspect:
 token-burner whoami
 ```
 
-## Burning
+## Burns happen in-session, not in a subprocess
 
-Pick exactly one of `--target` or `--preset`.
+Token-burner's old design spawned `npx token-burner burn` and read `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from env. That breaks under Claude Max / OAuth (no key in env) and is the wrong shape — your CLI agent already has provider auth, that's how it's talking to you.
 
-```bash
-token-burner burn --provider anthropic --target 50000
-token-burner burn --provider openai --preset tier-2
-```
+The current design: your agent IS the burner. It opens `/api/burns/start`, generates output, posts each chunk's text to `/api/burns/{id}/events`, the server tokenizes, the agent reads back the canonical cumulative count and loops until target. See [the skill](https://token-burner-seven.vercel.app/skill.md) for the full HTTP dance.
 
-Preset tiers:
+## Legacy `burn` subcommand
 
-- `tier-1` **Amuse-Bouche** — 25,000 billed tokens
-- `tier-2` **Statement Piece** — 250,000 billed tokens
-- `tier-3` **Couture Run** — 2,500,000 billed tokens
-
-## Provider credentials
-
-Burns use **your** official provider credentials from your local environment. The website never stores API keys.
-
-```bash
-export ANTHROPIC_API_KEY=...
-export OPENAI_API_KEY=...
-```
-
-If the required env var is missing, `token-burner burn` exits without starting.
+The CLI still ships `token-burner burn --provider <openai|anthropic> --target N --api-key KEY`. It works for users who genuinely want to spawn a subprocess and bill against their own provider key. **It is no longer the recommended path** — the demo prompt and the skill both route around it.
 
 ## Hard rules
 
-- Never exceeds your requested billed-token target. Stops conservatively under.
-- One active burn per human at a time.
-- If the CLI process dies, the burn dies.
-- No site login. No stored provider keys.
+- One active burn per human at a time. (Server auto-interrupts after 60s without a heartbeat.)
+- If your CLI agent's session ends, the burn ends. Always POST `/api/burns/{id}/finish` on exit.
+- The site never stores provider keys. (None ever leave your machine in the recommended flow.)
 
 ## Repo
 
