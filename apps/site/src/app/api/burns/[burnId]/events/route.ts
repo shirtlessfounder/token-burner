@@ -8,6 +8,7 @@ import {
 
 import {
   BurnSessionInvalidError,
+  EventContentTooLargeError,
   recordBurnEvent,
 } from "../../../../../lib/server/burns";
 
@@ -58,6 +59,16 @@ export async function POST(
   } catch (error) {
     if (error instanceof BurnSessionInvalidError) {
       return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+    if (error instanceof EventContentTooLargeError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          contentChars: error.contentChars,
+          limit: error.limit,
+        },
+        { status: 413 },
+      );
     }
     throw error;
   }

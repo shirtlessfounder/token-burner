@@ -11,5 +11,5 @@
 -- agent-self-reported for backwards compat.
 
 alter table burn_events
-  add column verified_output_tokens bigint
+  add column if not exists verified_output_tokens bigint
   check (verified_output_tokens is null or verified_output_tokens >= 0);

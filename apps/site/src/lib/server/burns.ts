@@ -45,6 +45,25 @@ export class BurnSessionInvalidError extends Error {
   }
 }
 
+// Caps how big eventPayload.content can be before the server rejects.
+// 500KB is roughly 150k tokens of english at 3.5 chars/token — way more
+// than any honest burn step. Above this we assume bug or abuse and reject
+// with a clear 413 instead of letting the tokenizer churn or the request
+// timeout at vercel's edge.
+const maxEventContentChars = 500_000;
+
+export class EventContentTooLargeError extends Error {
+  readonly contentChars: number;
+  readonly limit = maxEventContentChars;
+  constructor(contentChars: number) {
+    super(
+      `event content too large: ${contentChars} chars exceeds ${maxEventContentChars} limit`,
+    );
+    this.name = "EventContentTooLargeError";
+    this.contentChars = contentChars;
+  }
+}
+
 const resolveDatabase = async (
   database?: TokenBurnerDatabase,
 ): Promise<TokenBurnerDatabase> => {
@@ -280,6 +299,10 @@ export const recordBurnEvent = async ({
   }
 
   const content = extractContent(eventPayload);
+  if (content !== null && content.length > maxEventContentChars) {
+    throw new EventContentTooLargeError(content.length);
+  }
+
   const verifiedStepTokens =
     content === null ? null : countOutputTokens(existing.provider, content);
 
@@ -291,28 +314,36 @@ export const recordBurnEvent = async ({
     createdAt: now,
   });
 
+  // Atomic update via SQL — avoids the read-then-compute-then-write race
+  // when two events arrive concurrently. The verified path increments;
+  // the legacy self-reported path takes the max-with-clamp.
   let nextCumulative = existing.billedTokensConsumed;
 
   if (verifiedStepTokens !== null) {
-    nextCumulative = Math.min(
-      existing.billedTokensConsumed + verifiedStepTokens,
-      existing.requestedBilledTokenTarget,
-    );
-  } else if (typeof billedTokensConsumed === "number") {
-    nextCumulative = Math.min(
-      Math.max(billedTokensConsumed, existing.billedTokensConsumed),
-      existing.requestedBilledTokenTarget,
-    );
-  }
-
-  if (nextCumulative !== existing.billedTokensConsumed) {
-    await queryDatabase
+    const [updated] = await queryDatabase
       .update(schema.burns)
       .set({
-        billedTokensConsumed: nextCumulative,
+        billedTokensConsumed: sql`least(${schema.burns.billedTokensConsumed} + ${verifiedStepTokens}, ${schema.burns.requestedBilledTokenTarget})`,
         lastHeartbeatAt: now,
       })
-      .where(eq(schema.burns.id, burnId));
+      .where(eq(schema.burns.id, burnId))
+      .returning({
+        billedTokensConsumed: schema.burns.billedTokensConsumed,
+      });
+    nextCumulative = updated.billedTokensConsumed;
+  } else if (typeof billedTokensConsumed === "number") {
+    const claimed = billedTokensConsumed;
+    const [updated] = await queryDatabase
+      .update(schema.burns)
+      .set({
+        billedTokensConsumed: sql`least(greatest(${schema.burns.billedTokensConsumed}, ${claimed}), ${schema.burns.requestedBilledTokenTarget})`,
+        lastHeartbeatAt: now,
+      })
+      .where(eq(schema.burns.id, burnId))
+      .returning({
+        billedTokensConsumed: schema.burns.billedTokensConsumed,
+      });
+    nextCumulative = updated.billedTokensConsumed;
   }
 
   return {
